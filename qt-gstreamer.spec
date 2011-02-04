@@ -3,8 +3,8 @@ Summary: C++ bindings for GStreamer with a Qt-style API
 Version: 0.10.1
 Release: %mkrel 1
 License: LGPLv2+
-Url: http://qjson.sourceforge.net/
-Group: Development/C
+Url: http://gstreamer.freedesktop.org/wiki/QtGStreamer
+Group: Development/KDE and Qt
 BuildRequires: cmake
 BuildRequires: qt4-devel
 BuildRequires: automoc
@@ -48,7 +48,7 @@ applications.
 
 %package -n %{develname}
 Summary: Development files for QtGstreamer
-Group: Development/C
+Group: Development/KDE and Qt
 Requires: %libname = %version-%release
 Provides: %name-devel = %version-%release
 
