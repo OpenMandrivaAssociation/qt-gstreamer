@@ -13,6 +13,7 @@ BuildRequires: libgstreamer0.10-plugins-base-devel
 BuildRequires: bison flex
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 Source0: http://gstreamer.freedesktop.org/src/qt-gstreamer/%{name}-%{version}.tar.bz2
+Patch0: qt-gstreamer-0.10.1-libdir.patch
 
 %description
 QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
@@ -71,9 +72,10 @@ QtGstreamer.
 
 %prep
 %setup -q
+%patch0 -p0 -b .libdir
 
 %build
-%cmake_qt4 -DQTGSTREAMER_TESTS=ON
+%cmake_qt4 -DQTGSTREAMER_TESTS=ON -DLIB_INSTALL_DIR=%{_libdir}
 %make
 
 %install
