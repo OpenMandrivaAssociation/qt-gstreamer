@@ -1,0 +1,40 @@
+--- src/CMakeLists.txt.libdir	2011-01-23 13:35:19.000000000 +0100
++++ src/CMakeLists.txt	2011-02-04 10:43:32.000000000 +0100
+@@ -1,5 +1,7 @@
+ # Common variables
+-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
++if(NOT DEFINED LIB_INSTALL_DIR)
++    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
++endif(NOT DEFINED LIB_INSTALL_DIR)
+ set(INCLUDES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/QtGStreamer)
+ set(EXPORT_TARGET_SET QtGStreamerTargets)
+ 
+--- cmake/modules/FindGStreamer.cmake.plugindir	2011-02-04 10:56:50.000000000 +0100
++++ cmake/modules/FindGStreamer.cmake	2011-02-04 11:05:34.000000000 +0100
+@@ -4,6 +4,7 @@
+ #  GSTREAMER_FOUND - system has GStreamer
+ #  GSTREAMER_INCLUDE_DIR - the GStreamer include directory
+ #  GSTREAMER_LIBRARY - the main GStreamer library
++#  GSTREAMER_PLUGIN_DIR - the GStreamer plugin directory
+ #
+ #  And for all the plugin libraries specified in the COMPONENTS
+ #  of find_package, this module will define:
+@@ -32,6 +33,9 @@
+ 
+ if (PKG_CONFIG_FOUND)
+     pkg_check_modules(PKG_GSTREAMER gstreamer-${GSTREAMER_ABI_VERSION})
++    exec_program(${PKG_CONFIG_EXECUTABLE}
++	    ARGS --variable pluginsdir gstreamer-${GSTREAMER_ABI_VERSION}
++	    OUTPUT_VARIABLE GSTREAMER_PLUGIN_DIR)
+ endif()
+ 
+ find_library(GSTREAMER_LIBRARY
+--- elements/CMakeLists.txt.plugindir	2011-02-04 11:06:17.000000000 +0100
++++ elements/CMakeLists.txt	2011-02-04 11:06:51.000000000 +0100
+@@ -15,5 +15,5 @@
+     target_link_libraries(gstqwidgetvideosink ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY}
+                                               ${GOBJECT_LIBRARIES} ${GSTREAMER_LIBRARY}
+                                               ${GSTREAMER_BASE_LIBRARY} ${GSTREAMER_VIDEO_LIBRARY})
+-    install(TARGETS gstqwidgetvideosink DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/gstreamer-0.10)
++    install(TARGETS gstqwidgetvideosink DESTINATION ${GSTREAMER_PLUGIN_DIR})
+ endif()
