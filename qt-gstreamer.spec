@@ -1,19 +1,28 @@
+%define major 0
+%define oldlibname %mklibname qt-gstreamer 0
+
 Name: qt-gstreamer
 Summary: C++ bindings for GStreamer with a Qt-style API
-Version: 0.10.1
-Release: %mkrel 1
+Version: 0.10.2
+Release: 1
 License: LGPLv2+
 Url: http://gstreamer.freedesktop.org/wiki/QtGStreamer
 Group: Development/KDE and Qt
+
+#BuildRequires: pkgconfig(glesv2)
+BuildRequires: pkgconfig(QtGui) < 5.0.0
+BuildRequires: pkgconfig(QtCore) < 5.0.0
+BuildRequires: pkgconfig(QtTest) < 5.0.0
+BuildRequires: pkgconfig(QtDeclarative) < 5.0.0
+BuildRequires: pkgconfig(QtOpenGL) < 5.0.0
+BuildRequires: pkgconfig(gstreamer-plugins-base-0.10)
+BuildRequires: qt4-qmlviewer
 BuildRequires: cmake
-BuildRequires: qt4-devel
-BuildRequires: automoc
 BuildRequires: boost-devel
-BuildRequires: libgstreamer0.10-plugins-base-devel
-BuildRequires: bison flex
-BuildRoot: %{_tmppath}/%{name}-%{version}-build
+BuildRequires: bison
+BuildRequires: flex
+BuildRequires: doxygen
 Source0: http://gstreamer.freedesktop.org/src/qt-gstreamer/%{name}-%{version}.tar.bz2
-Patch0: qt-gstreamer-0.10.1-libdir.patch
 
 %description
 QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
@@ -21,36 +30,73 @@ plus some helper classes for integrating GStreamer better in Qt
 applications.
 
 %files
-%defattr(-,root,root)
-%_libdir/gstreamer-0.10/libgstqwidgetvideosink.so
+%_libdir/gstreamer-0.10/libgstqtvideosink.so
+%_qt_importdir/QtGStreamer/
 
 #-------------------------------------------------------------------
+%define libqtglib %mklibname qtglib %{version}
 
-%define major 0
-%define libname %mklibname %name %{major}
-
-%package -n %{libname}
-Summary: C++ bindings for GStreamer with a Qt-style API
+%package -n %{libqtglib}
+Summary: C++/Qt bindings for parts of the GLib and GObject APIs
 Group: System/Libraries
+Conflicts: %{oldlibname} < 0.10.2
+%description -n %{libqtglib}
+Library providing C++/Qt bindings for parts of the GLib and GObject 
+APIs, a base on which QtGStreamer is built.
 
-%description -n %{libname}
-QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
-plus some helper classes for integrating GStreamer better in Qt
-applications.
+%files -n %{libqtglib}
+%_libdir/libQtGLib-2.0.so.%{major}*
 
-%files -n %{libname}
-%defattr(-,root,root)
-%_libdir/*.so.%{major}
-%_libdir/*.so.%{major}.*
+#-------------------------------------------------------------------
+%define libqtgstreamer %mklibname qtgstreamer %{version}
+
+%package -n %{libqtgstreamer}
+Summary: C++/Qt bindings for GStreamer
+Group: System/Libraries
+Conflicts: %{oldlibname} < 0.10.2
+%description -n %{libqtgstreamer}
+Library providing C++/Qt bindings for GStreamer
+
+%files -n %{libqtgstreamer}
+%_libdir/libQtGStreamer-0.10.so.%{major}*
+
+#-------------------------------------------------------------------
+%define libqtgstreamerui %mklibname qtgstreamerui %{version}
+
+%package -n %{libqtgstreamerui}
+Summary: Library providing integration with QtGui
+Group: System/Libraries
+Conflicts: %{oldlibname} < 0.10.2
+%description -n %{libqtgstreamerui}
+Library providing integration with QtGui.
+
+%files -n %{libqtgstreamerui}
+%_libdir/libQtGStreamerUi-0.10.so.%{major}*
+
+#-------------------------------------------------------------------
+%define libqtgstreamerutils %mklibname qtgstreamerutils %{version}
+
+%package -n %{libqtgstreamerutils}
+Summary: Library providing some high level utility classes
+Group: System/Libraries
+Conflicts: %{oldlibname} < 0.10.2
+%description -n %{libqtgstreamerutils}
+Library providing some high level utility classes.
+
+%files -n %{libqtgstreamerutils}
+%_libdir/libQtGStreamerUtils-0.10.so.%{major}*
 
 #--------------------------------------------------------------------
-
 %define develname %mklibname -d %name
 
 %package -n %{develname}
 Summary: Development files for QtGstreamer
 Group: Development/KDE and Qt
-Requires: %libname = %version-%release
+Requires: %libqtglib = %version-%release
+Requires: %libqtgstreamer = %version-%release
+Requires: %libqtgstreamerui = %version-%release
+Requires: %libqtgstreamerutils = %version-%release
+
 Provides: %name-devel = %version-%release
 
 %description -n %{develname}
@@ -62,7 +108,6 @@ This package contains files for developing applications using
 QtGstreamer.
 
 %files -n %{develname}
-%defattr(-,root,root)
 %_libdir/lib*.so
 %_libdir/pkgconfig/*.pc
 %_libdir/QtGStreamer/*.cmake
@@ -72,21 +117,10 @@ QtGstreamer.
 
 %prep
 %setup -q
-%patch0 -p0 -b .libdir
 
 %build
 %cmake_qt4 -DQTGSTREAMER_TESTS=ON -DLIB_INSTALL_DIR=%{_libdir}
 %make
 
 %install
-rm -rf %{buildroot}
-
 %makeinstall_std -C build
-
-%check
-pushd build
-ctest
-popd
-
-%clean
-rm -rf %buildroot
