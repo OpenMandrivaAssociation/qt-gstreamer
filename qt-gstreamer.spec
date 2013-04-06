@@ -29,7 +29,7 @@ applications.
 %{_qt_importdir}/QtGStreamer/
 
 #-------------------------------------------------------------------
-%define libqtglib %mklibname qtglib %{version}
+%define libqtglib %mklibname qtglib2.0_ %{version}
 
 %package -n %{libqtglib}
 Summary:	C++/Qt bindings for parts of the GLib and GObject APIs
