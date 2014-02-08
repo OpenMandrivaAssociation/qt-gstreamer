@@ -4,7 +4,7 @@
 Name:		qt-gstreamer
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Version:	0.10.2
-Release:	3
+Release:	4
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
