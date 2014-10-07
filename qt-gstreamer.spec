@@ -144,7 +144,7 @@ QtGstreamer.
 %setup -q
 
 %build
-%cmake -DQTGSTREAMER_TESTS=ON
+%cmake
 %make
 
 %install
