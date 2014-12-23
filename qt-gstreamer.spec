@@ -151,4 +151,4 @@ QtGstreamer.
 %makeinstall_std -C build
 
 # replace double slashes in pc files
-sed -i -e 's#\//#\/g' %{_libdir}/pkgconfig/*.pc
+sed -i -e 's#\//#\/#g' %{buildroot}%{_libdir}/pkgconfig/*.pc
