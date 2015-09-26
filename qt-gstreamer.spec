@@ -1,11 +1,12 @@
 %define api 1.0
 %define glibapi 2.0
 %define major 0
+%define qt5_name qt5-gstreamer
 
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
 Version:	1.2.0
-Release:	3
+Release:	4
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
@@ -18,6 +19,15 @@ BuildRequires:	qt4-qmlviewer
 BuildRequires:	boost-devel
 BuildRequires:	qt4-devel
 BuildRequires:	pkgconfig(gstreamer-plugins-base-%{api})
+
+
+BuildRequires: pkgconfig(Qt5Core)
+BuildRequires: pkgconfig(Qt5Declarative)
+BuildRequires: pkgconfig(Qt5Gui)
+BuildRequires: pkgconfig(Qt5OpenGL)
+BuildRequires: pkgconfig(Qt5Qml)
+BuildRequires: pkgconfig(Qt5Quick)
+BuildRequires: pkgconfig(Qt5Test)
 
 %description
 QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
@@ -133,10 +143,138 @@ This package contains files for developing applications using
 QtGstreamer.
 
 %files -n %{devname}
-%{_libdir}/lib*.so
-%{_libdir}/pkgconfig/*.pc
-%{_libdir}/cmake/QtGStreamer/*.cmake
+%_libdir/libQtGLib-2.0.so
+%_libdir/libQtGStreamer-%{api}.so
+%_libdir/libQtGStreamerUi-%{api}.so
+%_libdir/libQtGStreamerUtils-%{api}.so
+%_libdir/pkgconfig/QtGStreamerUtils-%{api}.pc
+%_libdir/pkgconfig/QtGStreamerUi-%{api}.pc
+%_libdir/pkgconfig/QtGStreamer-%{api}.pc
+%_libdir/pkgconfig/QtGLib-2.0.pc
+%_libdir/cmake/QtGStreamer/*.cmake
 %{_includedir}/QtGStreamer
+
+#-------------------------------------------------------------------
+%package -n %{qt5_name}
+Summary: C++ bindings for GStreamer with a Qt5-style API
+Group:   Development/KDE and Qt
+
+%description -n %{qt5_name}
+Qt5GStreamer provides C++ bindings for GStreamer with a Qt-style API,
+plus some helper classes for integrating GStreamer better in Qt5
+applications.
+
+%files -n %{qt5_name}
+%_libdir/gstreamer-%{api}/libgstqt5videosink.so
+%_qt5_importdir/QtGStreamer/
+%_libdir/qt5/qml/QtGStreamer/
+
+#-------------------------------------------------------------------
+%define libqt5glib %mklibname qt5glib 2.0 %{major}
+
+%package -n %{libqt5glib}
+Summary: C++/Qt5 bindings for parts of the GLib and GObject APIs
+Group:   System/Libraries
+
+%description -n %{libqt5glib}
+Library providing C++/Q5t bindings for parts of the GLib and GObject 
+APIs, a base on which Qt5GStreamer is built.
+
+%files -n %{libqt5glib}
+%_libdir/libQt5GLib-2.0.so.%{major}*
+%_libdir/libQt5GLib-2.0.so.%{version}
+
+#-------------------------------------------------------------------
+%define libqt5gstreamer %mklibname qt5gstreamer %{api} %{major}
+
+%package -n %{libqt5gstreamer}
+Summary: C++/Qt5 bindings for GStreamer
+Group:   System/Libraries
+
+%description -n %{libqt5gstreamer}
+Library providing C++/Qt5 bindings for GStreamer
+
+%files -n %{libqt5gstreamer}
+%_libdir/libQt5GStreamer-%{api}.so.%{major}*
+%_libdir/libQt5GStreamer-%{api}.so.%{version}
+
+#-------------------------------------------------------------------
+%define libqt5gstreamerquick %mklibname qt5gstreamerquick %{api} %{major}
+
+%package -n %{libqt5gstreamerquick}
+Summary: C++/Qt5 bindings for GStreamer
+Group: System/Libraries
+%description -n %{libqt5gstreamerquick}
+Library providing C++/Qt5 bindings for GStreamer
+
+%files -n %{libqt5gstreamerquick}
+%_libdir/libQt5GStreamerQuick-%{api}.so.%{major}*
+%_libdir/libQt5GStreamerQuick-%{api}.so.%{version}
+
+#-------------------------------------------------------------------
+%define libqt5gstreamerui %mklibname qt5gstreamerui %{api} %{major}
+
+%package -n %{libqt5gstreamerui}
+Summary: Library providing integration with Qt5Gui
+Group:   System/Libraries
+
+%description -n %{libqt5gstreamerui}
+Library providing integration with Qt5Gui.
+
+%files -n %{libqt5gstreamerui}
+%_libdir/libQt5GStreamerUi-%{api}.so.%{major}*
+%_libdir/libQt5GStreamerUi-%{api}.so.%{version}
+
+#-------------------------------------------------------------------
+%define libqt5gstreamerutils %mklibname qt5gstreamerutils %{api} %{major}
+
+%package -n %{libqt5gstreamerutils}
+Summary: Library providing some high level utility classes
+Group:   System/Libraries
+
+%description -n %{libqt5gstreamerutils}
+Library providing some high level utility classes.
+
+%files -n %{libqt5gstreamerutils}
+%_libdir/libQt5GStreamerUtils-%{api}.so.%{major}*
+%_libdir/libQt5GStreamerUtils-%{api}.so.%{version}
+
+#--------------------------------------------------------------------
+%define develnameQt5 %mklibname -d %{qt5_name}
+
+%package -n %{develnameQt5}
+Summary: Development files for Qt5Gstreamer
+Group:   Development/KDE and Qt
+
+Requires: %libqt5glib = %version-%release
+Requires: %libqt5gstreamer = %version-%release
+Requires: %libqt5gstreamerquick = %version-%release
+Requires: %libqt5gstreamerui = %version-%release
+Requires: %libqt5gstreamerutils = %version-%release
+Requires: boost-devel
+Provides: qt5-gstreamer-devel = %version-%release
+
+%description -n %{develnameQt5}
+Qt5GStreamer provides C++ bindings for GStreamer with a Qt-style API,
+plus some helper classes for integrating GStreamer better in Qt5
+applications.
+
+This package contains files for developing applications using 
+Qt5Gstreamer.
+
+%files -n %{develnameQt5}
+%_includedir/Qt5GStreamer
+%_libdir/cmake/Qt5GStreamer/*.cmake
+%_libdir/libQt5GLib-2.0.so
+%_libdir/libQt5GStreamer-%{api}.so
+%_libdir/libQt5GStreamerQuick-%{api}.so
+%_libdir/libQt5GStreamerUi-%{api}.so
+%_libdir/libQt5GStreamerUtils-%{api}.so
+%_libdir/pkgconfig/Qt5GLib-2.0.pc
+%_libdir/pkgconfig/Qt5GStreamer-%{api}.pc
+%_libdir/pkgconfig/Qt5GStreamerQuick-%{api}.pc
+%_libdir/pkgconfig/Qt5GStreamerUi-%{api}.pc
+%_libdir/pkgconfig/Qt5GStreamerUtils-%{api}.pc
 
 #--------------------------------------------------------------------
 
@@ -144,8 +282,20 @@ QtGstreamer.
 %setup -q
 
 %build
-%cmake
+mkdir -p qt4
+
+pushd qt4
+%cmake -DQT_VERSION=4 ../../
 %make
+popd
+
+mkdir -p qt5
+
+pushd qt5
+%cmake -DQT_VERSION=5 ../../
+%make
+popd
 
 %install
-%makeinstall_std -C build
+%makeinstall_std -C qt4/build
+%makeinstall_std -C qt5/build
