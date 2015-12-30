@@ -6,7 +6,7 @@
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
 Version:	1.2.0
-Release:	4
+Release:	5
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
@@ -19,15 +19,13 @@ BuildRequires:	qt4-qmlviewer
 BuildRequires:	boost-devel
 BuildRequires:	qt4-devel
 BuildRequires:	pkgconfig(gstreamer-plugins-base-%{api})
-
-
-BuildRequires: pkgconfig(Qt5Core)
-BuildRequires: pkgconfig(Qt5Declarative)
-BuildRequires: pkgconfig(Qt5Gui)
-BuildRequires: pkgconfig(Qt5OpenGL)
-BuildRequires: pkgconfig(Qt5Qml)
-BuildRequires: pkgconfig(Qt5Quick)
-BuildRequires: pkgconfig(Qt5Test)
+BuildRequires:	pkgconfig(Qt5Core)
+BuildRequires:	pkgconfig(Qt5Declarative)
+BuildRequires:	pkgconfig(Qt5Gui)
+BuildRequires:	pkgconfig(Qt5OpenGL)
+BuildRequires:	pkgconfig(Qt5Qml)
+BuildRequires:	pkgconfig(Qt5Quick)
+BuildRequires:	pkgconfig(Qt5Test)
 
 %description
 QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
