@@ -31,7 +31,6 @@ BuildRequires:	boost-devel
 BuildRequires:	qt4-devel
 BuildRequires:	pkgconfig(gstreamer-plugins-base-%{api})
 BuildRequires:	pkgconfig(Qt5Core)
-BuildRequires:	pkgconfig(Qt5Declarative)
 BuildRequires:	pkgconfig(Qt5Gui)
 BuildRequires:	pkgconfig(Qt5OpenGL)
 BuildRequires:	pkgconfig(Qt5Qml)
@@ -175,7 +174,6 @@ applications.
 
 %files -n %{qt5_name}
 %{_libdir}/gstreamer-%{api}/libgstqt5videosink.so
-%_qt5_importdir/QtGStreamer/
 %{_libdir}/qt5/qml/QtGStreamer/
 
 #-------------------------------------------------------------------
