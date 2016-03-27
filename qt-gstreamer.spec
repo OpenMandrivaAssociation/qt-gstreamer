@@ -29,6 +29,7 @@ BuildRequires:	flex
 BuildRequires:	qt4-qmlviewer
 BuildRequires:	boost-devel
 BuildRequires:	qt4-devel
+BuildRequires:	qmake5
 BuildRequires:	pkgconfig(gstreamer-plugins-base-%{api})
 BuildRequires:	pkgconfig(Qt5Core)
 BuildRequires:	pkgconfig(Qt5Gui)
