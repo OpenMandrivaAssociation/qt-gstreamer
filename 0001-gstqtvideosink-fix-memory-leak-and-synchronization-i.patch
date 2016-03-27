@@ -1,0 +1,40 @@
+From fe3e8979697773c69d98d172f3eea0bf0dd37287 Mon Sep 17 00:00:00 2001
+From: George Kiagiadakis <george.kiagiadakis@collabora.com>
+Date: Tue, 30 Sep 2014 01:11:58 +0300
+Subject: [PATCH 1/6] gstqtvideosink: fix memory leak and synchronization issue
+ related to buffer reference counting
+
+https://bugzilla.gnome.org/show_bug.cgi?id=736758
+---
+ elements/gstqtvideosink/delegates/basedelegate.cpp | 2 +-
+ elements/gstqtvideosink/painters/videomaterial.cpp | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/elements/gstqtvideosink/delegates/basedelegate.cpp b/elements/gstqtvideosink/delegates/basedelegate.cpp
+index 82b465e..7dde59c 100644
+--- a/elements/gstqtvideosink/delegates/basedelegate.cpp
++++ b/elements/gstqtvideosink/delegates/basedelegate.cpp
+@@ -181,7 +181,7 @@ bool BaseDelegate::event(QEvent *event)
+     {
+         GST_LOG_OBJECT(m_sink, "Received deactivate event");
+ 
+-        g_clear_pointer(&m_buffer, gst_buffer_unref);
++        gst_buffer_replace (&m_buffer, NULL);
+         update();
+ 
+         return true;
+diff --git a/elements/gstqtvideosink/painters/videomaterial.cpp b/elements/gstqtvideosink/painters/videomaterial.cpp
+index bda535c..3073e6d 100644
+--- a/elements/gstqtvideosink/painters/videomaterial.cpp
++++ b/elements/gstqtvideosink/painters/videomaterial.cpp
+@@ -252,6 +252,7 @@ VideoMaterial::~VideoMaterial()
+ {
+     if (!m_textureSize.isEmpty())
+         glDeleteTextures(m_textureCount, m_textureIds);
++    gst_buffer_replace(&m_frame, NULL);
+ }
+ 
+ int VideoMaterial::compare(const QSGMaterial *other) const
+-- 
+2.5.0
+

@@ -11,6 +11,17 @@ License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
 Source0:	http://gstreamer.freedesktop.org/src/qt-gstreamer/%{name}-%{version}.tar.xz
+## upstream patches
+Patch1:		0001-gstqtvideosink-fix-memory-leak-and-synchronization-i.patch
+Patch2:		0002-CMakeLists.txt-actually-require-GStreamer-1.2.0.patch
+Patch3:		0003-qtglvideosinkbase-don-t-use-variable-name-interface-.patch
+Patch4:		0004-Add-pbutils-include-directory-to-include-paths.patch
+Patch5:		0005-Workaround-build-failures-with-boost-1.57-and-moc.patch
+Patch6:		0006-Fix-compilation-with-GStreamer-1.5.1.patch
+
+## uptreamable patches
+Patch100:	qt-gstreamer-1.2.0-boost_160.patch
+
 BuildRequires:	bison
 BuildRequires:	cmake
 BuildRequires:	doxygen
@@ -141,15 +152,15 @@ This package contains files for developing applications using
 QtGstreamer.
 
 %files -n %{devname}
-%_libdir/libQtGLib-2.0.so
-%_libdir/libQtGStreamer-%{api}.so
-%_libdir/libQtGStreamerUi-%{api}.so
-%_libdir/libQtGStreamerUtils-%{api}.so
-%_libdir/pkgconfig/QtGStreamerUtils-%{api}.pc
-%_libdir/pkgconfig/QtGStreamerUi-%{api}.pc
-%_libdir/pkgconfig/QtGStreamer-%{api}.pc
-%_libdir/pkgconfig/QtGLib-2.0.pc
-%_libdir/cmake/QtGStreamer/*.cmake
+%{_libdir}/libQtGLib-2.0.so
+%{_libdir}/libQtGStreamer-%{api}.so
+%{_libdir}/libQtGStreamerUi-%{api}.so
+%{_libdir}/libQtGStreamerUtils-%{api}.so
+%{_libdir}/pkgconfig/QtGStreamerUtils-%{api}.pc
+%{_libdir}/pkgconfig/QtGStreamerUi-%{api}.pc
+%{_libdir}/pkgconfig/QtGStreamer-%{api}.pc
+%{_libdir}/pkgconfig/QtGLib-2.0.pc
+%{_libdir}/cmake/QtGStreamer/*.cmake
 %{_includedir}/QtGStreamer
 
 #-------------------------------------------------------------------
@@ -163,9 +174,9 @@ plus some helper classes for integrating GStreamer better in Qt5
 applications.
 
 %files -n %{qt5_name}
-%_libdir/gstreamer-%{api}/libgstqt5videosink.so
+%{_libdir}/gstreamer-%{api}/libgstqt5videosink.so
 %_qt5_importdir/QtGStreamer/
-%_libdir/qt5/qml/QtGStreamer/
+%{_libdir}/qt5/qml/QtGStreamer/
 
 #-------------------------------------------------------------------
 %define libqt5glib %mklibname qt5glib 2.0 %{major}
@@ -179,8 +190,8 @@ Library providing C++/Q5t bindings for parts of the GLib and GObject
 APIs, a base on which Qt5GStreamer is built.
 
 %files -n %{libqt5glib}
-%_libdir/libQt5GLib-2.0.so.%{major}*
-%_libdir/libQt5GLib-2.0.so.%{version}
+%{_libdir}/libQt5GLib-2.0.so.%{major}*
+%{_libdir}/libQt5GLib-2.0.so.%{version}
 
 #-------------------------------------------------------------------
 %define libqt5gstreamer %mklibname qt5gstreamer %{api} %{major}
@@ -193,8 +204,8 @@ Group:   System/Libraries
 Library providing C++/Qt5 bindings for GStreamer
 
 %files -n %{libqt5gstreamer}
-%_libdir/libQt5GStreamer-%{api}.so.%{major}*
-%_libdir/libQt5GStreamer-%{api}.so.%{version}
+%{_libdir}/libQt5GStreamer-%{api}.so.%{major}*
+%{_libdir}/libQt5GStreamer-%{api}.so.%{version}
 
 #-------------------------------------------------------------------
 %define libqt5gstreamerquick %mklibname qt5gstreamerquick %{api} %{major}
@@ -206,8 +217,8 @@ Group: System/Libraries
 Library providing C++/Qt5 bindings for GStreamer
 
 %files -n %{libqt5gstreamerquick}
-%_libdir/libQt5GStreamerQuick-%{api}.so.%{major}*
-%_libdir/libQt5GStreamerQuick-%{api}.so.%{version}
+%{_libdir}/libQt5GStreamerQuick-%{api}.so.%{major}*
+%{_libdir}/libQt5GStreamerQuick-%{api}.so.%{version}
 
 #-------------------------------------------------------------------
 %define libqt5gstreamerui %mklibname qt5gstreamerui %{api} %{major}
@@ -220,8 +231,8 @@ Group:   System/Libraries
 Library providing integration with Qt5Gui.
 
 %files -n %{libqt5gstreamerui}
-%_libdir/libQt5GStreamerUi-%{api}.so.%{major}*
-%_libdir/libQt5GStreamerUi-%{api}.so.%{version}
+%{_libdir}/libQt5GStreamerUi-%{api}.so.%{major}*
+%{_libdir}/libQt5GStreamerUi-%{api}.so.%{version}
 
 #-------------------------------------------------------------------
 %define libqt5gstreamerutils %mklibname qt5gstreamerutils %{api} %{major}
@@ -234,8 +245,8 @@ Group:   System/Libraries
 Library providing some high level utility classes.
 
 %files -n %{libqt5gstreamerutils}
-%_libdir/libQt5GStreamerUtils-%{api}.so.%{major}*
-%_libdir/libQt5GStreamerUtils-%{api}.so.%{version}
+%{_libdir}/libQt5GStreamerUtils-%{api}.so.%{major}*
+%{_libdir}/libQt5GStreamerUtils-%{api}.so.%{version}
 
 #--------------------------------------------------------------------
 %define develnameQt5 %mklibname -d %{qt5_name}
@@ -262,22 +273,23 @@ Qt5Gstreamer.
 
 %files -n %{develnameQt5}
 %_includedir/Qt5GStreamer
-%_libdir/cmake/Qt5GStreamer/*.cmake
-%_libdir/libQt5GLib-2.0.so
-%_libdir/libQt5GStreamer-%{api}.so
-%_libdir/libQt5GStreamerQuick-%{api}.so
-%_libdir/libQt5GStreamerUi-%{api}.so
-%_libdir/libQt5GStreamerUtils-%{api}.so
-%_libdir/pkgconfig/Qt5GLib-2.0.pc
-%_libdir/pkgconfig/Qt5GStreamer-%{api}.pc
-%_libdir/pkgconfig/Qt5GStreamerQuick-%{api}.pc
-%_libdir/pkgconfig/Qt5GStreamerUi-%{api}.pc
-%_libdir/pkgconfig/Qt5GStreamerUtils-%{api}.pc
+%{_libdir}/cmake/Qt5GStreamer/*.cmake
+%{_libdir}/libQt5GLib-2.0.so
+%{_libdir}/libQt5GStreamer-%{api}.so
+%{_libdir}/libQt5GStreamerQuick-%{api}.so
+%{_libdir}/libQt5GStreamerUi-%{api}.so
+%{_libdir}/libQt5GStreamerUtils-%{api}.so
+%{_libdir}/pkgconfig/Qt5GLib-2.0.pc
+%{_libdir}/pkgconfig/Qt5GStreamer-%{api}.pc
+%{_libdir}/pkgconfig/Qt5GStreamerQuick-%{api}.pc
+%{_libdir}/pkgconfig/Qt5GStreamerUi-%{api}.pc
+%{_libdir}/pkgconfig/Qt5GStreamerUtils-%{api}.pc
 
 #--------------------------------------------------------------------
 
 %prep
 %setup -q
+%apply_patches
 
 %build
 mkdir -p qt4

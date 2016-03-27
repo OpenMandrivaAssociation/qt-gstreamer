@@ -1,0 +1,26 @@
+From 77e58dae634fa1b282c64d435d32a2998c671b39 Mon Sep 17 00:00:00 2001
+From: Hannes Weisbach <hannes.weisbach@mailbox.tu-dresden.de>
+Date: Sun, 7 Jun 2015 13:37:48 +0200
+Subject: [PATCH 4/6] Add pbutils include directory to include paths
+
+Add directory with pbutils headers to the include_directories directive
+for the auto tests.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=750493
+---
+ tests/auto/CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/auto/CMakeLists.txt b/tests/auto/CMakeLists.txt
+index fd09bf8..6b53366 100644
+--- a/tests/auto/CMakeLists.txt
++++ b/tests/auto/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-include_directories(${GSTREAMER_INCLUDE_DIR} ${GLIB2_INCLUDE_DIR} ${QTGSTREAMER_INCLUDES})
++include_directories(${GSTREAMER_INCLUDE_DIR} ${GSTREAMER_PBUTILS_INCLUDE_DIR} ${GLIB2_INCLUDE_DIR} ${QTGSTREAMER_INCLUDES})
+ add_definitions(${QTGSTREAMER_DEFINITIONS} -DGST_DISABLE_XML -DGST_DISABLE_LOADSAVE)
+ add_definitions(-DSRCDIR="${CMAKE_CURRENT_SOURCE_DIR}")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${QTGSTREAMER_FLAGS}")
+-- 
+2.5.0
+

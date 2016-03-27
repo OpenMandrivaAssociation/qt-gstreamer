@@ -1,0 +1,81 @@
+Only in qt-gstreamer-1.2.0.orig/: debugfiles.list
+Only in qt-gstreamer-1.2.0.orig/: debuglinks.list
+Only in qt-gstreamer-1.2.0.orig/: debugsources.list
+Only in qt-gstreamer-1.2.0.orig/: elfbins.list
+diff -ru qt-gstreamer-1.2.0.orig/src/QGlib/connect.cpp qt-gstreamer-1.2.0/src/QGlib/connect.cpp
+--- qt-gstreamer-1.2.0.orig/src/QGlib/connect.cpp	2016-03-16 07:23:00.379267208 -0500
++++ qt-gstreamer-1.2.0/src/QGlib/connect.cpp	2016-03-16 15:19:08.778142832 -0500
+@@ -20,6 +20,7 @@
+ #include <glib-object.h>
+ #include <QtCore/QHash>
+ #include <QtCore/QMutex>
++
+ #include <boost/multi_index_container.hpp>
+ #ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+ #include <boost/multi_index/sequenced_index.hpp>
+diff -ru qt-gstreamer-1.2.0.orig/src/QGlib/connect.h qt-gstreamer-1.2.0/src/QGlib/connect.h
+--- qt-gstreamer-1.2.0.orig/src/QGlib/connect.h	2014-07-08 13:38:36.000000000 -0500
++++ qt-gstreamer-1.2.0/src/QGlib/connect.h	2016-03-16 15:18:55.663045063 -0500
+@@ -25,7 +25,9 @@
+ #include <QtCore/QSharedPointer>
+ #include <QtCore/QFlags>
+ #include <QtCore/QHash>
++#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+ #include <boost/type_traits.hpp>
++#endif
+ #include <boost/utility/enable_if.hpp>
+ 
+ namespace QGlib {
+diff -ru qt-gstreamer-1.2.0.orig/src/QGlib/connectimpl.h qt-gstreamer-1.2.0/src/QGlib/connectimpl.h
+--- qt-gstreamer-1.2.0.orig/src/QGlib/connectimpl.h	2014-07-08 13:38:36.000000000 -0500
++++ qt-gstreamer-1.2.0/src/QGlib/connectimpl.h	2016-03-16 15:14:34.047245486 -0500
+@@ -26,7 +26,9 @@
+ # include "refpointer.h"
+ # include <QtCore/QList>
+ # include <stdexcept>
++#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+ # include <boost/type_traits.hpp>
++#endif
+ 
+ 
+ namespace QGlib {
+diff -ru qt-gstreamer-1.2.0.orig/src/QGlib/refpointer.h qt-gstreamer-1.2.0/src/QGlib/refpointer.h
+--- qt-gstreamer-1.2.0.orig/src/QGlib/refpointer.h	2014-07-08 13:38:36.000000000 -0500
++++ qt-gstreamer-1.2.0/src/QGlib/refpointer.h	2016-03-16 15:14:44.264280432 -0500
+@@ -23,7 +23,9 @@
+ #include "type.h"
+ #include "wrap.h"
+ #include <cstddef>
++#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+ #include <boost/type_traits.hpp>
++#endif
+ #include <boost/utility/enable_if.hpp>
+ #include <QtCore/QHash>
+ 
+diff -ru qt-gstreamer-1.2.0.orig/src/QGlib/value.cpp qt-gstreamer-1.2.0/src/QGlib/value.cpp
+--- qt-gstreamer-1.2.0.orig/src/QGlib/value.cpp	2014-07-08 13:38:36.000000000 -0500
++++ qt-gstreamer-1.2.0/src/QGlib/value.cpp	2016-03-16 13:14:11.121763377 -0500
+@@ -19,7 +19,9 @@
+ #include "value.h"
+ #include "string.h"
+ #include <cstring>
++#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+ #include <boost/type_traits.hpp>
++#endif
+ #include <glib-object.h>
+ #include <QtCore/QDebug>
+ #include <QtCore/QReadWriteLock>
+diff -ru qt-gstreamer-1.2.0.orig/src/QGlib/value.h qt-gstreamer-1.2.0/src/QGlib/value.h
+--- qt-gstreamer-1.2.0.orig/src/QGlib/value.h	2014-07-08 13:38:36.000000000 -0500
++++ qt-gstreamer-1.2.0/src/QGlib/value.h	2016-03-16 15:14:54.391338364 -0500
+@@ -24,7 +24,9 @@
+ #include "refpointer.h"
+ #include "error.h"
+ #include <boost/mpl/if.hpp>
++#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+ #include <boost/type_traits.hpp>
++#endif
+ #include <stdexcept>
+ #include <QtCore/QString>
+ #include <QtCore/QDebug>
+Only in qt-gstreamer-1.2.0/: x86_64-redhat-linux-gnu
