@@ -1,0 +1,52 @@
+From f3cc3fd8b40eb1d15987ddccacb2eb60d45d8cf0 Mon Sep 17 00:00:00 2001
+From: Diane Trout <diane@ghic.org>
+Date: Tue, 7 Apr 2015 21:26:03 -0700
+Subject: [PATCH 07/16] ElementMessage also needs a valid structure
+
+The solution is the same as for ApplicationMessage, and
+since it wasn't caught by the unit tests add a unit test.
+---
+ src/QGst/message.cpp          |  2 +-
+ tests/auto/refpointertest.cpp | 13 +++++++++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/src/QGst/message.cpp b/src/QGst/message.cpp
+index 3e7bb56..e8b5a90 100644
+--- a/src/QGst/message.cpp
++++ b/src/QGst/message.cpp
+@@ -356,7 +356,7 @@ ApplicationMessagePtr ApplicationMessage::create(const ObjectPtr & source, const
+ 
+ ElementMessagePtr ElementMessage::create(const ObjectPtr & source, const Structure & structure)
+ {
+-    GstStructure *s = structure.isValid() ? gst_structure_copy(structure) : NULL;
++    GstStructure *s = structure.isValid() ? gst_structure_copy(structure) : gst_structure_new_empty("null");
+     return ElementMessagePtr::wrap(gst_message_new_element(source, s), false);
+ }
+ 
+diff --git a/tests/auto/refpointertest.cpp b/tests/auto/refpointertest.cpp
+index 7a509b7..6fe065a 100644
+--- a/tests/auto/refpointertest.cpp
++++ b/tests/auto/refpointertest.cpp
+@@ -182,6 +182,19 @@ void RefPointerTest::cppWrappersTest()
+                 != static_cast<QGlib::RefCountedObject*>(msg2.operator->()));
+         QVERIFY(msg3 == msg2);
+     }
++
++    {
++        QGst::MessagePtr msg = QGst::ElementMessage::create(e);
++        QGst::MessagePtr msg2 = msg;
++        QCOMPARE(static_cast<QGlib::RefCountedObject*>(msg.operator->()),
++                 static_cast<QGlib::RefCountedObject*>(msg2.operator->()));
++        QVERIFY(msg2 == msg);
++
++        QGst::MessagePtr msg3 = QGst::MessagePtr::wrap(msg2);
++        QVERIFY(static_cast<QGlib::RefCountedObject*>(msg3.operator->())
++                != static_cast<QGlib::RefCountedObject*>(msg2.operator->()));
++        QVERIFY(msg3 == msg2);
++    }   
+ }
+ 
+ void RefPointerTest::messageDynamicCastTest()
+-- 
+2.8.3
+

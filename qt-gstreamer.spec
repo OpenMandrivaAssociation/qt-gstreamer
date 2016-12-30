@@ -6,18 +6,29 @@
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
 Version:	1.2.0
-Release:	7
+Release:	8
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
 Source0:	http://gstreamer.freedesktop.org/src/qt-gstreamer/%{name}-%{version}.tar.xz
 ## upstream patches
-Patch1:		0001-gstqtvideosink-fix-memory-leak-and-synchronization-i.patch
-Patch2:		0002-CMakeLists.txt-actually-require-GStreamer-1.2.0.patch
-Patch3:		0003-qtglvideosinkbase-don-t-use-variable-name-interface-.patch
-Patch4:		0004-Add-pbutils-include-directory-to-include-paths.patch
-Patch5:		0005-Workaround-build-failures-with-boost-1.57-and-moc.patch
-Patch6:		0006-Fix-compilation-with-GStreamer-1.5.1.patch
+Patch0:		0000-gstqtvideosink-fix-memory-leak-and-synchronization-i.patch
+Patch1:		0001-CMakeLists.txt-actually-require-GStreamer-1.2.0.patch
+Patch2:		0002-qtglvideosinkbase-don-t-use-variable-name-interface-.patch
+Patch3:		0003-when-built-against-1.4-the-unit-test-fails-because-i.patch
+Patch4:		0004-gstreamer-now-supports-animated-PNGs-so-PNG-is-now-a.patch
+Patch5:		0005-tests-auto-taglisttest.cpp-it-appears-tag-lists-remo.patch
+Patch6:		0006-Create-an-empty-structure-to-pass-to-gst_message_new.patch
+Patch7:		0007-ElementMessage-also-needs-a-valid-structure.patch
+Patch8:		0008-Add-pbutils-include-directory-to-include-paths.patch
+Patch9:		0009-Workaround-build-failures-with-boost-1.57-and-moc.patch
+Patch10:	0010-Fix-compilation-with-GStreamer-1.5.1.patch
+Patch11:	0011-whitespace-cleanup.patch
+Patch12:	0012-By-GStreamer-1.6-the-audio-codec-name-for-FLAC-chang.patch
+Patch13:	0013-It-appears-there-is-only-one-attachement.patch
+Patch14:	0014-The-geometry-must-never-be-set-to-0-once-the-node-is.patch
+Patch15:	0015-Fix-build-with-Clang-3.8.patch
+Patch16:	0016-gst_message_new_application-fails-when-passed-a-NULL.patch
 
 ## uptreamable patches
 Patch100:	qt-gstreamer-1.2.0-boost_160.patch
@@ -254,13 +265,13 @@ Library providing some high level utility classes.
 Summary: Development files for Qt5Gstreamer
 Group:   Development/KDE and Qt
 
-Requires: %libqt5glib = %version-%release
-Requires: %libqt5gstreamer = %version-%release
-Requires: %libqt5gstreamerquick = %version-%release
-Requires: %libqt5gstreamerui = %version-%release
-Requires: %libqt5gstreamerutils = %version-%release
+Requires: %libqt5glib = %{EVRD}
+Requires: %libqt5gstreamer = %{EVRD}
+Requires: %libqt5gstreamerquick = %{EVRD}
+Requires: %libqt5gstreamerui = %{EVRD}
+Requires: %libqt5gstreamerutils = %{EVRD}
 Requires: boost-devel
-Provides: qt5-gstreamer-devel = %version-%release
+Provides: qt5-gstreamer-devel = %{EVRD}
 
 %description -n %{develnameQt5}
 Qt5GStreamer provides C++ bindings for GStreamer with a Qt-style API,

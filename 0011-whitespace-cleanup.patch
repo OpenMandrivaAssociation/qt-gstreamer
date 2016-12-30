@@ -1,0 +1,25 @@
+From 5c51c6271da6ad67e9cffa701d3f8b1684185bd1 Mon Sep 17 00:00:00 2001
+From: Diane Trout <diane@ghic.org>
+Date: Wed, 4 Nov 2015 15:35:36 -0800
+Subject: [PATCH 11/16] whitespace cleanup
+
+---
+ tests/auto/refpointertest.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/auto/refpointertest.cpp b/tests/auto/refpointertest.cpp
+index 6fe065a..9a21e03 100644
+--- a/tests/auto/refpointertest.cpp
++++ b/tests/auto/refpointertest.cpp
+@@ -194,7 +194,7 @@ void RefPointerTest::cppWrappersTest()
+         QVERIFY(static_cast<QGlib::RefCountedObject*>(msg3.operator->())
+                 != static_cast<QGlib::RefCountedObject*>(msg2.operator->()));
+         QVERIFY(msg3 == msg2);
+-    }   
++    }
+ }
+ 
+ void RefPointerTest::messageDynamicCastTest()
+-- 
+2.8.3
+

@@ -1,0 +1,90 @@
+From af4d94de093b114c5371bda522ec11075ead60ea Mon Sep 17 00:00:00 2001
+From: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+Date: Sun, 6 Mar 2016 13:50:03 +0100
+Subject: [PATCH 14/16] The geometry must never be set to 0 once the node is
+ added to the SG
+
+The application can crash otherwise.
+---
+ elements/gstqtvideosink/painters/videonode.cpp | 14 ++++++++------
+ elements/gstqtvideosink/painters/videonode.h   |  1 +
+ 2 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/elements/gstqtvideosink/painters/videonode.cpp b/elements/gstqtvideosink/painters/videonode.cpp
+index 2afb3e5..e14287c 100644
+--- a/elements/gstqtvideosink/painters/videonode.cpp
++++ b/elements/gstqtvideosink/painters/videonode.cpp
+@@ -22,7 +22,7 @@
+ #include <QtQuick/QSGFlatColorMaterial>
+ 
+ VideoNode::VideoNode()
+-  : QSGGeometryNode()
++  : m_validGeometry(false), QSGGeometryNode()
+ {
+     setFlags(OwnsGeometry | OwnsMaterial, true);
+     setMaterialTypeSolidBlack();
+@@ -31,8 +31,8 @@ VideoNode::VideoNode()
+ void VideoNode::changeFormat(const BufferFormat & format)
+ {
+     setMaterial(VideoMaterial::create(format));
+-    setGeometry(0);
+     m_materialType = MaterialTypeVideo;
++    m_validGeometry = false;
+ }
+ 
+ void VideoNode::setMaterialTypeSolidBlack()
+@@ -40,8 +40,8 @@ void VideoNode::setMaterialTypeSolidBlack()
+     QSGFlatColorMaterial *m = new QSGFlatColorMaterial;
+     m->setColor(Qt::black);
+     setMaterial(m);
+-    setGeometry(0);
+     m_materialType = MaterialTypeSolidBlack;
++    m_validGeometry = false;
+ }
+ 
+ void VideoNode::setCurrentFrame(GstBuffer* buffer)
+@@ -77,7 +77,7 @@ void VideoNode::updateGeometry(const PaintAreas & areas)
+     QSGGeometry *g = geometry();
+ 
+     if (m_materialType == MaterialTypeVideo) {
+-        if (!g)
++        if (!m_validGeometry)
+             g = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
+ 
+         QSGGeometry::TexturedPoint2D *v = g->vertexDataAsTexturedPoint2D();
+@@ -94,7 +94,7 @@ void VideoNode::updateGeometry(const PaintAreas & areas)
+         setTex(v + 2, areas.sourceRect.topRight());
+         setTex(v + 3, areas.sourceRect.bottomRight());
+     } else {
+-        if (!g)
++        if (!m_validGeometry)
+             g = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
+ 
+         QSGGeometry::Point2D *v = g->vertexDataAsPoint2D();
+@@ -105,8 +105,10 @@ void VideoNode::updateGeometry(const PaintAreas & areas)
+         setGeom(v + 3, areas.videoArea.bottomRight());
+     }
+ 
+-    if (!geometry())
++    if (!m_validGeometry) {
+         setGeometry(g);
++        m_validGeometry = true;
++    }
+ 
+     markDirty(DirtyGeometry);
+ }
+diff --git a/elements/gstqtvideosink/painters/videonode.h b/elements/gstqtvideosink/painters/videonode.h
+index ed9d36f..8ba4c3b 100644
+--- a/elements/gstqtvideosink/painters/videonode.h
++++ b/elements/gstqtvideosink/painters/videonode.h
+@@ -45,6 +45,7 @@ public:
+ 
+ private:
+     MaterialType m_materialType;
++    bool m_validGeometry;
+ };
+ 
+ #endif // VIDEONODE_H
+-- 
+2.8.3
+

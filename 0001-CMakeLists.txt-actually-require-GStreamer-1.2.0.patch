@@ -1,7 +1,7 @@
 From d48430593be88a5199f6f9fd1ead833fb2eb2cc5 Mon Sep 17 00:00:00 2001
 From: George Kiagiadakis <george.kiagiadakis@collabora.com>
 Date: Tue, 30 Sep 2014 01:13:36 +0300
-Subject: [PATCH 2/6] CMakeLists.txt: actually require GStreamer 1.2.0
+Subject: [PATCH 01/16] CMakeLists.txt: actually require GStreamer 1.2.0
 
 ---
  CMakeLists.txt | 16 ++++++++--------
@@ -47,5 +47,5 @@ index 574e31f..4d3e7dd 100644
  find_package(GLIB2)
  macro_log_feature(GLIB2_FOUND "GLib" "Required to build QtGLib" "http://www.gtk.org/" TRUE)
 -- 
-2.5.0
+2.8.3
 
