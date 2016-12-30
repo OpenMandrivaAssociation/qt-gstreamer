@@ -1,0 +1,31 @@
+From 53220ba158b74cf5d5bf27e03f7892a6629a8d50 Mon Sep 17 00:00:00 2001
+From: Diane Trout <diane@ghic.org>
+Date: Mon, 6 Apr 2015 21:54:41 -0700
+Subject: [PATCH 05/16] tests/auto/taglisttest.cpp: it appears tag lists remove
+ duplicates, so create a new buffer to make sure the image count is
+ incremented
+
+---
+ tests/auto/taglisttest.cpp | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/tests/auto/taglisttest.cpp b/tests/auto/taglisttest.cpp
+index 31dd1f2..1f649b8 100644
+--- a/tests/auto/taglisttest.cpp
++++ b/tests/auto/taglisttest.cpp
+@@ -396,8 +396,11 @@ void TagListTest::sampleTest()
+     QCOMPARE(structure4->name(), QString("files"));
+     QCOMPARE(structure4->value("attachment").get<QString>(), QString("avalue"));
+ 
++    QGst::BufferPtr buffer2 = QGst::Buffer::create(222);
++    QGst::SamplePtr sample5 = QGst::Sample::create(buffer2, caps, QGst::Segment(), QGst::Structure());
++
+     //now set multiple samples and verify the count
+-    tl.setImage(sample3, QGst::TagMergeAppend);
++    tl.setImage(sample5, QGst::TagMergeAppend);
+     QCOMPARE(tl.imageCount(), 2);
+ 
+     tl.setAttachment(sample2, QGst::TagMergePrepend);
+-- 
+2.8.3
+

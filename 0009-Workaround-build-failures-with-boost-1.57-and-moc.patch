@@ -1,7 +1,7 @@
 From 1d2edcc9562c8826fd17b5233691f4a313ab71c7 Mon Sep 17 00:00:00 2001
 From: Heiko Becker <heirecka@exherbo.org>
 Date: Fri, 7 Nov 2014 00:11:02 +0100
-Subject: [PATCH 5/6] Workaround build failures with boost>=1.57 and moc
+Subject: [PATCH 09/16] Workaround build failures with boost>=1.57 and moc
 
 Otherwise I get the following error message:
 'usr/include/boost/type_traits/detail/has_binary_operator.hp:50:
@@ -32,5 +32,5 @@ index 9ff6fde..58a3367 100644
  
  namespace QGlib {
 -- 
-2.5.0
+2.8.3
 

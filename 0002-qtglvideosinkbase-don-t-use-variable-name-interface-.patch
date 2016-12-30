@@ -1,7 +1,7 @@
 From cf09822eeeee802a0314d7b0ef8c5a469558a0d5 Mon Sep 17 00:00:00 2001
 From: Jeremie Knuesel <jeremie.knusel@sensefly.com>
 Date: Wed, 10 Dec 2014 13:12:17 +0100
-Subject: [PATCH 3/6] qtglvideosinkbase: don't use variable name 'interface'
+Subject: [PATCH 02/16] qtglvideosinkbase: don't use variable name 'interface'
  which is a reserved keyword on Windows
 
 Rename 'interface' argument to 'balance_interface' to fix compilation
@@ -55,5 +55,5 @@ index 5cf3381..cfe8bb7 100644
      static void colorbalance_set_value(GstColorBalance *balance,
                                         GstColorBalanceChannel *channel,
 -- 
-2.5.0
+2.8.3
 

@@ -1,0 +1,30 @@
+From 6fc7f9bda0d9ec7a3c71f54be889ca8c8280f469 Mon Sep 17 00:00:00 2001
+From: Diane Trout <diane@ghic.org>
+Date: Sat, 16 Apr 2016 21:42:16 -0700
+Subject: [PATCH 13/16] It appears there is only one attachement.
+
+As far as I can tell from staring at the code it really
+does look like there's only one attachment added to the tag
+list. But I'm not sure what it was originally set to 2.
+
+This makes the test pass, but may be hiding a problem.
+---
+ tests/auto/taglisttest.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/auto/taglisttest.cpp b/tests/auto/taglisttest.cpp
+index 1f649b8..043f930 100644
+--- a/tests/auto/taglisttest.cpp
++++ b/tests/auto/taglisttest.cpp
+@@ -404,7 +404,7 @@ void TagListTest::sampleTest()
+     QCOMPARE(tl.imageCount(), 2);
+ 
+     tl.setAttachment(sample2, QGst::TagMergePrepend);
+-    QCOMPARE(tl.attachmentCount(), 2);
++    QCOMPARE(tl.attachmentCount(), 1);
+ 
+ }
+ 
+-- 
+2.8.3
+

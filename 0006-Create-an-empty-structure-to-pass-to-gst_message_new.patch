@@ -1,0 +1,29 @@
+From c994209573c5b07e71276938aae212b40943f076 Mon Sep 17 00:00:00 2001
+From: Diane Trout <diane@ghic.org>
+Date: Tue, 7 Apr 2015 21:15:39 -0700
+Subject: [PATCH 06/16] Create an empty structure to pass to
+ gst_message_new_application if we don't have a valid one.
+
+When passed a NULL structure gst_message_new_application fails with
+the following error.  GStreamer-CRITICAL **:
+gst_message_new_application: assertion 'structure != NULL' failed
+---
+ src/QGst/message.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/QGst/message.cpp b/src/QGst/message.cpp
+index a252562..3e7bb56 100644
+--- a/src/QGst/message.cpp
++++ b/src/QGst/message.cpp
+@@ -348,7 +348,7 @@ void StreamStatusMessage::setStreamStatusObject(const QGlib::Value & obj)
+ 
+ ApplicationMessagePtr ApplicationMessage::create(const ObjectPtr & source, const Structure & structure)
+ {
+-    GstStructure *s = structure.isValid() ? gst_structure_copy(structure) : NULL;
++    GstStructure *s = structure.isValid() ? gst_structure_copy(structure) : gst_structure_new_empty("null");
+     return ApplicationMessagePtr::wrap(gst_message_new_application(source, s), false);
+ }
+ 
+-- 
+2.8.3
+
