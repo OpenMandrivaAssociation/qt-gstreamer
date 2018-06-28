@@ -3,10 +3,12 @@
 %define major 0
 %define qt5_name qt5-gstreamer
 
+%bcond_with qt4
+
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
 Version:	1.2.0
-Release:	8
+Release:	9
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
@@ -37,12 +39,15 @@ BuildRequires:	bison
 BuildRequires:	cmake
 BuildRequires:	doxygen
 BuildRequires:	flex
-BuildRequires:	qt4-qmlviewer
 BuildRequires:	boost-devel
+%if %{with qt4}
 BuildRequires:	qt4-devel
+BuildRequires:	qt4-qmlviewer
+%endif
 BuildRequires:	qmake5
 BuildRequires:	pkgconfig(gstreamer-plugins-base-%{api})
 BuildRequires:	pkgconfig(Qt5Core)
+BuildRequires:	pkgconfig(Qt5Quick)
 BuildRequires:	pkgconfig(Qt5Gui)
 BuildRequires:	pkgconfig(Qt5OpenGL)
 BuildRequires:	pkgconfig(Qt5Qml)
@@ -54,9 +59,10 @@ QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
 plus some helper classes for integrating GStreamer better in Qt
 applications.
 
+%if %{with qt4}
 %files
 %{_libdir}/gstreamer-%{api}/libgstqtvideosink.so
-%{_qt_importdir}/QtGStreamer/
+%{_libdir}/qt5/QtGStreamer/
 
 #----------------------------------------------------------------------------
 
@@ -173,6 +179,7 @@ QtGstreamer.
 %{_libdir}/pkgconfig/QtGLib-2.0.pc
 %{_libdir}/cmake/QtGStreamer/*.cmake
 %{_includedir}/QtGStreamer
+%endif
 
 #-------------------------------------------------------------------
 %package -n %{qt5_name}
@@ -302,12 +309,14 @@ Qt5Gstreamer.
 %apply_patches
 
 %build
+%if %{with qt4}
 mkdir -p qt4
 
 pushd qt4
 %cmake -DQT_VERSION=4 ../../
 %make
 popd
+%endif
 
 mkdir -p qt5
 
@@ -317,5 +326,7 @@ pushd qt5
 popd
 
 %install
+%if %{with qt4}
 %makeinstall_std -C qt4/build
+%endif
 %makeinstall_std -C qt5/build
