@@ -34,8 +34,8 @@ Patch16:	0016-gst_message_new_application-fails-when-passed-a-NULL.patch
 
 ## uptreamable patches
 Patch100:	qt-gstreamer-1.2.0-boost_160.patch
-Patch101:	https://git.archlinux.org/svntogit/packages.git/plain/trunk/gstreamer-1.6.patch
-Patch102:	https://git.archlinux.org/svntogit/packages.git/plain/trunk/gstreamer-1.16.patch
+Patch101:	https://git.archlinux.org/svntogit/packages.git/plain/trunk/gstreamer-1.16.patch
+
 BuildRequires:	bison
 BuildRequires:	cmake
 BuildRequires:	doxygen
