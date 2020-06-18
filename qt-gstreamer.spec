@@ -8,7 +8,7 @@
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
 Version:	1.2.0
-Release:	10
+Release:	11
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
@@ -34,7 +34,8 @@ Patch16:	0016-gst_message_new_application-fails-when-passed-a-NULL.patch
 
 ## uptreamable patches
 Patch100:	qt-gstreamer-1.2.0-boost_160.patch
-
+Patch101:	https://git.archlinux.org/svntogit/packages.git/plain/trunk/gstreamer-1.6.patch
+Patch102:	https://git.archlinux.org/svntogit/packages.git/plain/trunk/gstreamer-1.16.patch
 BuildRequires:	bison
 BuildRequires:	cmake
 BuildRequires:	doxygen
@@ -305,28 +306,27 @@ Qt5Gstreamer.
 #--------------------------------------------------------------------
 
 %prep
-%setup -q
-%autopatch -p1
+%autosetup -p1
 
 %build
 %if %{with qt4}
 mkdir -p qt4
 
-pushd qt4
+cd qt4
 %cmake -DQT_VERSION=4 ../../
-%make
-popd
+%make_build
+cd ..
 %endif
 
 mkdir -p qt5
 
 pushd qt5
 %cmake -DQT_VERSION=5 ../../
-%make
+%make_build
 popd
 
 %install
 %if %{with qt4}
-%makeinstall_std -C qt4/build
+%make_install -C qt4/build
 %endif
-%makeinstall_std -C qt5/build
+%make_install -C qt5/build
