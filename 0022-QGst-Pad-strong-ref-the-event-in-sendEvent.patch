@@ -1,0 +1,29 @@
+From 0cf247bfb444973c5c36dde03f17c8192cb60b07 Mon Sep 17 00:00:00 2001
+From: Jeremie Knuesel <jeremie.knusel@sensefly.com>
+Date: Tue, 18 Nov 2014 12:04:43 +0100
+Subject: [PATCH 22/36] QGst::Pad: strong ref() the event in sendEvent()
+
+Just as in Element::sendEvent().
+
+https://bugzilla.gnome.org/show_bug.cgi?id=740319
+---
+ src/QGst/pad.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/QGst/pad.cpp b/src/QGst/pad.cpp
+index 5132460..1a07f0a 100644
+--- a/src/QGst/pad.cpp
++++ b/src/QGst/pad.cpp
+@@ -111,6 +111,9 @@ bool Pad::query(const QueryPtr & query)
+ 
+ bool Pad::sendEvent(const EventPtr &event)
+ {
++    //Sending an event passes ownership of it, so we need to strong ref() it as we still
++    //hold a pointer to the object, and will release it when the wrapper is cleared.
++    gst_event_ref(event);
+     return gst_pad_send_event(object<GstPad>(), event);
+ }
+ 
+-- 
+2.26.2
+

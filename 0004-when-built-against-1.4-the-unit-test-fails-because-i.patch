@@ -1,24 +1,23 @@
-From af4edf4cb9d33aa210c2cd670f657b9020bb0eb3 Mon Sep 17 00:00:00 2001
+From d90bbcd749cfa66a26fcc4dc4de237d40646d791 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
-Date: Wed, 4 Nov 2015 21:53:37 -0800
-Subject: [PATCH 12/16] By GStreamer 1.6 the audio-codec name for FLAC changed
- from "Free Lossless Audio Codec (FLAC)" to "FLAC", so we need to update to
- test for the shorter string.
+Date: Mon, 6 Apr 2015 21:47:43 -0700
+Subject: [PATCH 04/36] when built against 1.4, the unit test fails because it
+ appears the description for flac changed
 
 ---
  tests/auto/discoverertest.cpp | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/tests/auto/discoverertest.cpp b/tests/auto/discoverertest.cpp
-index 6fef794..84dd760 100644
+index cd9c9e0..27e6770 100644
 --- a/tests/auto/discoverertest.cpp
 +++ b/tests/auto/discoverertest.cpp
 @@ -389,7 +389,7 @@ void DiscovererTest::setupDiscoveryData()
              << (StreamInfoList()
                  << StreamInfoPtr((new AudioStreamInfo("audio/x-flac, framed=true"))
                                   ->setSampleRate(48000)->setChannels(1)->setDepth(16)
--                                 ->addTag("audio-codec", "Free Lossless Audio Codec (FLAC)")
-+                                 ->addTag("audio-codec", "FLAC")
+-                                 ->addTag("audio-codec", "FLAC")
++                                 ->addTag("audio-codec", "Free Lossless Audio Codec (FLAC)")
                                   ->addTag("container-format", "Ogg"))
                  << StreamInfoPtr((new AudioStreamInfo("audio/x-flac"))
                                   ->setSampleRate(48000)->setChannels(1)
@@ -26,11 +25,11 @@ index 6fef794..84dd760 100644
                                   ->addTag("video-codec", "Theora")))
              << (TagList()
                  << makeTag("container-format", "Ogg")
--                << makeTag("audio-codec", "Free Lossless Audio Codec (FLAC)")
-+                << makeTag("audio-codec", "FLAC")
+-                << makeTag("audio-codec", "FLAC")
++                << makeTag("audio-codec", "Free Lossless Audio Codec (FLAC)")
                  << makeTag("video-codec", "Theora")
                  << makeTag("bitrate", 200000U));
      QTest::newRow("numbers07.png")
 -- 
-2.8.3
+2.26.2
 

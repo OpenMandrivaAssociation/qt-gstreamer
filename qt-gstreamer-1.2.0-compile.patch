@@ -1,0 +1,24 @@
+diff -up qt-gstreamer-1.2.0/src/QGst/event.cpp.omv~ qt-gstreamer-1.2.0/src/QGst/event.cpp
+--- qt-gstreamer-1.2.0/src/QGst/event.cpp.omv~	2020-09-13 01:51:38.736603340 +0200
++++ qt-gstreamer-1.2.0/src/QGst/event.cpp	2020-09-13 01:51:52.392772567 +0200
+@@ -125,7 +125,7 @@ Segment SegmentEvent::segment() const
+ //********************************************************
+ TagEventPtr TagEvent::create(const TagList & taglist)
+ {
+-    GstEvent * e = gst_event_new_tag(gst_tag_list_copy(taglist));
++    GstEvent * e = gst_event_new_tag(gst_tag_list_copy(static_cast<const GstTagList*>(taglist)));
+     return TagEventPtr::wrap(e, false);
+ }
+ 
+diff -up qt-gstreamer-1.2.0/src/QGst/message.cpp.omv~ qt-gstreamer-1.2.0/src/QGst/message.cpp
+--- qt-gstreamer-1.2.0/src/QGst/message.cpp.omv~	2020-09-13 01:49:07.827740594 +0200
++++ qt-gstreamer-1.2.0/src/QGst/message.cpp	2020-09-13 01:51:29.278486194 +0200
+@@ -157,7 +157,7 @@ QString InfoMessage::debugMessage() cons
+ 
+ TagMessagePtr TagMessage::create(const ObjectPtr & source, const TagList & taglist)
+ {
+-    GstMessage *m = gst_message_new_tag(source, gst_tag_list_copy(taglist));
++    GstMessage *m = gst_message_new_tag(source, gst_tag_list_copy(static_cast<const GstTagList*>(taglist)));
+     return TagMessagePtr::wrap(m, false);
+ }
+ 

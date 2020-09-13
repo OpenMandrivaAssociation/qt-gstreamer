@@ -1,0 +1,125 @@
+From 7e0aa96a117414a947a899e28dea2b99cc4ef299 Mon Sep 17 00:00:00 2001
+From: "Daniele E. Domenichelli" <daniele.domenichelli@iit.it>
+Date: Tue, 10 Oct 2017 09:25:19 +0200
+Subject: [PATCH 34/36] Fix QUIET flag in FindGStreamer and
+ FindGStreamerPluginsBase
+
+---
+ cmake/modules/FindGStreamer.cmake             | 10 ++++++----
+ cmake/modules/FindGStreamerPluginsBase.cmake  | 12 +++++++++---
+ cmake/modules/MacroFindGStreamerLibrary.cmake |  6 +++---
+ 3 files changed, 18 insertions(+), 10 deletions(-)
+
+diff --git a/cmake/modules/FindGStreamer.cmake b/cmake/modules/FindGStreamer.cmake
+index 2c61cec..8ad91ca 100644
+--- a/cmake/modules/FindGStreamer.cmake
++++ b/cmake/modules/FindGStreamer.cmake
+@@ -33,7 +33,7 @@ set(GSTREAMER_ABI_VERSION "1.0")
+ find_package(PkgConfig)
+ 
+ if (PKG_CONFIG_FOUND)
+-    pkg_check_modules(PKG_GSTREAMER gstreamer-${GSTREAMER_ABI_VERSION})
++    pkg_check_modules(PKG_GSTREAMER QUIET gstreamer-${GSTREAMER_ABI_VERSION})
+     if(PKG_GSTREAMER_FOUND)
+         exec_program(${PKG_CONFIG_EXECUTABLE}
+                      ARGS --variable pluginsdir gstreamer-${GSTREAMER_ABI_VERSION}
+@@ -79,7 +79,7 @@ mark_as_advanced(GSTREAMER_LIBRARY
+ include(MacroFindGStreamerLibrary)
+ 
+ macro(_find_gst_component _name _header)
+-    find_gstreamer_library(${_name} ${_header} ${GSTREAMER_ABI_VERSION})
++    find_gstreamer_library(${_name} ${_header} ${GSTREAMER_ABI_VERSION} ${GStreamer_FIND_QUIETLY})
+     set(_GSTREAMER_EXTRA_VARIABLES ${_GSTREAMER_EXTRA_VARIABLES}
+                                     GSTREAMER_${_name}_LIBRARY GSTREAMER_${_name}_INCLUDE_DIR)
+ endmacro()
+@@ -103,7 +103,9 @@ endforeach()
+ if (GStreamer_FIND_VERSION)
+     if (PKG_GSTREAMER_FOUND)
+         if("${PKG_GSTREAMER_VERSION}" VERSION_LESS "${GStreamer_FIND_VERSION}")
+-            message(STATUS "Found GStreamer version ${PKG_GSTREAMER_VERSION}, but at least version ${GStreamer_FIND_VERSION} is required")
++            if(NOT GStreamer_FIND_QUIETLY)
++                message(STATUS "Found GStreamer version ${PKG_GSTREAMER_VERSION}, but at least version ${GStreamer_FIND_VERSION} is required")
++            endif()
+             set(GSTREAMER_VERSION_COMPATIBLE FALSE)
+         else()
+             set(GSTREAMER_VERSION_COMPATIBLE TRUE)
+@@ -128,7 +130,7 @@ int main() { return 0; }
+ #endif
+ " GSTREAMER_VERSION_COMPATIBLE)
+ 
+-        if (NOT GSTREAMER_VERSION_COMPATIBLE)
++        if (NOT GSTREAMER_VERSION_COMPATIBLE AND NOT GStreamer_FIND_QUIETLY)
+             message(STATUS "GStreamer ${GStreamer_FIND_VERSION} is required, but the version found is older")
+         endif()
+     else()
+diff --git a/cmake/modules/FindGStreamerPluginsBase.cmake b/cmake/modules/FindGStreamerPluginsBase.cmake
+index 6e75b8e..516cdc0 100644
+--- a/cmake/modules/FindGStreamerPluginsBase.cmake
++++ b/cmake/modules/FindGStreamerPluginsBase.cmake
+@@ -23,15 +23,19 @@ set(GSTREAMER_ABI_VERSION "1.0")
+ find_package(PkgConfig)
+ 
+ if (PKG_CONFIG_FOUND)
+-    pkg_check_modules(PKG_GSTREAMER_PLUGINS_BASE gstreamer-plugins-base-${GSTREAMER_ABI_VERSION})
++    pkg_check_modules(PKG_GSTREAMER_PLUGINS_BASE QUIET gstreamer-plugins-base-${GSTREAMER_ABI_VERSION})
+ endif()
+ 
+ 
+ # Find the plugin libraries
+ include(MacroFindGStreamerLibrary)
+ 
++if (NOT DEFINED GStreamerPluginsBase_FIND_QUIETLY)
++  set(GStreamerPluginsBase_FIND_QUIETLY 0)
++endif()
++
+ macro(_find_gst_plugins_base_component _name _header)
+-    find_gstreamer_library(${_name} ${_header} ${GSTREAMER_ABI_VERSION})
++    find_gstreamer_library(${_name} ${_header} ${GSTREAMER_ABI_VERSION} ${GStreamerPluginsBase_FIND_QUIETLY})
+     set(_GSTREAMER_PLUGINS_BASE_EXTRA_VARIABLES ${_GSTREAMER_PLUGINS_BASE_EXTRA_VARIABLES}
+                                         GSTREAMER_${_name}_LIBRARY GSTREAMER_${_name}_INCLUDE_DIR)
+ endmacro()
+@@ -67,7 +71,9 @@ endforeach()
+ if (GStreamerPluginsBase_FIND_VERSION)
+     if (PKG_GSTREAMER_PLUGINS_BASE_FOUND)
+         if("${PKG_GSTREAMER_PLUGINS_BASE_VERSION}" VERSION_LESS "${GStreamerPluginsBase_FIND_VERSION}")
+-            message(STATUS "Found gst-plugins-base version ${PKG_GSTREAMER_PLUGINS_BASE_VERSION}, but at least version ${GStreamerPluginsBase_FIND_VERSION} is required")
++            if (NOT GStreamerPluginsBase_FIND_QUIETLY)
++                message(STATUS "Found gst-plugins-base version ${PKG_GSTREAMER_PLUGINS_BASE_VERSION}, but at least version ${GStreamerPluginsBase_FIND_VERSION} is required")
++            endif()
+             set(GSTREAMER_PLUGINS_BASE_VERSION_COMPATIBLE FALSE)
+         else()
+             set(GSTREAMER_PLUGINS_BASE_VERSION_COMPATIBLE TRUE)
+diff --git a/cmake/modules/MacroFindGStreamerLibrary.cmake b/cmake/modules/MacroFindGStreamerLibrary.cmake
+index 761a80c..b46cbe8 100644
+--- a/cmake/modules/MacroFindGStreamerLibrary.cmake
++++ b/cmake/modules/MacroFindGStreamerLibrary.cmake
+@@ -6,7 +6,7 @@
+ # Redistribution and use is allowed according to the terms of the BSD license.
+ # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+ 
+-macro(find_gstreamer_library _name _header _abi_version)
++macro(find_gstreamer_library _name _header _abi_version _quiet)
+     string(TOLOWER ${_name} _lower_name)
+     string(TOUPPER ${_name} _upper_name)
+ 
+@@ -17,7 +17,7 @@ macro(find_gstreamer_library _name _header _abi_version)
+     endif()
+ 
+     if (PKG_CONFIG_FOUND)
+-        pkg_check_modules(PKG_GSTREAMER_${_upper_name} gstreamer-${_lower_name}-${_abi_version})
++        pkg_check_modules(PKG_GSTREAMER_${_upper_name} QUIET gstreamer-${_lower_name}-${_abi_version})
+     endif()
+ 
+     find_library(GSTREAMER_${_upper_name}_LIBRARY
+@@ -39,7 +39,7 @@ macro(find_gstreamer_library _name _header _abi_version)
+         set(GSTREAMER_${_upper_name}_LIBRARY_FOUND FALSE)
+     endif()
+ 
+-    if (NOT _GSTREAMER_${_upper_name}_QUIET)
++    if (NOT _GSTREAMER_${_upper_name}_QUIET AND NOT _quiet)
+         if (GSTREAMER_${_upper_name}_LIBRARY)
+             message(STATUS "Found GSTREAMER_${_upper_name}_LIBRARY: ${GSTREAMER_${_upper_name}_LIBRARY}")
+         else()
+-- 
+2.26.2
+

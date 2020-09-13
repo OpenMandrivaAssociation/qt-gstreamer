@@ -1,0 +1,1560 @@
+From 437a3ae0e0548f5db7515341728a77a4e852ff80 Mon Sep 17 00:00:00 2001
+From: Pavel Bludov <pbludov@gmail.com>
+Date: Fri, 23 Oct 2015 14:56:26 +0800
+Subject: [PATCH 31/36] Device & DeviceMonitor support
+
+---
+ src/QGst/CMakeLists.txt    |   4 +
+ src/QGst/Device            |   1 +
+ src/QGst/DeviceMonitor     |   1 +
+ src/QGst/device.cpp        |  60 +++
+ src/QGst/device.h          |  50 ++
+ src/QGst/devicemonitor.cpp |  71 +++
+ src/QGst/devicemonitor.h   |  53 +++
+ src/QGst/enums.h           |   9 +
+ src/QGst/gen.cpp           | 909 +++++++++++++++++++------------------
+ src/QGst/global.h          |   4 +
+ src/QGst/message.cpp       |  30 ++
+ src/QGst/message.h         |  27 ++
+ 12 files changed, 786 insertions(+), 433 deletions(-)
+ create mode 100644 src/QGst/Device
+ create mode 100644 src/QGst/DeviceMonitor
+ create mode 100644 src/QGst/device.cpp
+ create mode 100644 src/QGst/device.h
+ create mode 100644 src/QGst/devicemonitor.cpp
+ create mode 100644 src/QGst/devicemonitor.h
+
+diff --git a/src/QGst/CMakeLists.txt b/src/QGst/CMakeLists.txt
+index f7bc74e..901ff03 100644
+--- a/src/QGst/CMakeLists.txt
++++ b/src/QGst/CMakeLists.txt
+@@ -34,6 +34,8 @@ set(QtGStreamer_SRCS
+     bufferlist.cpp
+     discoverer.cpp
+     segment.cpp
++    device.cpp
++    devicemonitor.cpp
+     ${CMAKE_CURRENT_BINARY_DIR}/gen.cpp
+ )
+ 
+@@ -95,6 +97,8 @@ set(QtGStreamer_INSTALLED_HEADERS
+     bufferlist.h        BufferList
+     discoverer.h        Discoverer
+     segment.h           Segment
++    device.h            Device
++    devicemonitor.h     DeviceMonitor
+ 
+     Ui/global.h
+     Ui/videowidget.h            Ui/VideoWidget
+diff --git a/src/QGst/Device b/src/QGst/Device
+new file mode 100644
+index 0000000..155c911
+--- /dev/null
++++ b/src/QGst/Device
+@@ -0,0 +1 @@
++#include "device.h"
+diff --git a/src/QGst/DeviceMonitor b/src/QGst/DeviceMonitor
+new file mode 100644
+index 0000000..ce319e6
+--- /dev/null
++++ b/src/QGst/DeviceMonitor
+@@ -0,0 +1 @@
++#include "devicemonitor.h"
+diff --git a/src/QGst/device.cpp b/src/QGst/device.cpp
+new file mode 100644
+index 0000000..2efb912
+--- /dev/null
++++ b/src/QGst/device.cpp
+@@ -0,0 +1,60 @@
++/*
++    Copyright (C) 2015  Pavel Bludov <pbludov@gmail.com>
++
++    This library is free software; you can redistribute it and/or modify
++    it under the terms of the GNU Lesser General Public License as published
++    by the Free Software Foundation; either version 2.1 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU Lesser General Public License for more details.
++
++    You should have received a copy of the GNU Lesser General Public License
++    along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++#include "device.h"
++#include "caps.h"
++#include "element.h"
++#include "../QGlib/string_p.h"
++#include <QtCore/QDebug>
++#include <gst/gst.h>
++
++namespace QGst {
++
++ElementPtr Device::createElement(const char* name) const
++{
++    GstElement *e = gst_device_create_element(object<GstDevice>(), name);
++    if (e) {
++        gst_object_ref_sink(e);
++    }
++    return ElementPtr::wrap(e, false);
++}
++
++CapsPtr Device::caps() const
++{
++    return CapsPtr::wrap(gst_device_get_caps(object<GstDevice>()), false);
++}
++
++QString Device::deviceClass() const
++{
++    return QGlib::Private::stringFromGCharPtr(gst_device_get_device_class(object<GstDevice>()));
++}
++
++QString Device::displayName() const
++{
++    return QGlib::Private::stringFromGCharPtr(gst_device_get_display_name(object<GstDevice>()));
++}
++
++bool Device::hasClasses(const char *classes) const
++{
++    return gst_device_has_classes(object<GstDevice>(), classes);
++}
++
++bool Device::reconfigureElement(const ElementPtr & element) const
++{
++    return gst_device_reconfigure_element(object<GstDevice>(), element);
++}
++
++} //namespace QGst
+diff --git a/src/QGst/device.h b/src/QGst/device.h
+new file mode 100644
+index 0000000..e1692d5
+--- /dev/null
++++ b/src/QGst/device.h
+@@ -0,0 +1,50 @@
++/*
++    Copyright (C) 2015  Pavel Bludov <pbludov@gmail.com>
++
++    This library is free software; you can redistribute it and/or modify
++    it under the terms of the GNU Lesser General Public License as published
++    by the Free Software Foundation; either version 2.1 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU Lesser General Public License for more details.
++
++    You should have received a copy of the GNU Lesser General Public License
++    along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++#ifndef QGST_DEVICE_H
++#define QGST_DEVICE_H
++
++#include "object.h"
++
++namespace QGst {
++
++    /*! \headerfile device.h <QGst/Device>
++     * \brief Wrapper class for GstDevice
++     *
++     * Device are objects representing a hardware device, they contain relevant
++     * metadata about the device, such as its class and the Caps representing
++     * the media types it can produce or handle.
++     *
++     */
++class QTGSTREAMER_EXPORT Device : public Object
++{
++    QGST_WRAPPER(Device)
++public:
++    QString displayName() const;
++    CapsPtr caps() const;
++
++    ElementPtr createElement(const char* name) const;
++    bool reconfigureElement(const ElementPtr & element) const;
++
++    QString deviceClass() const;
++    bool hasClasses(const char *classes) const;
++};
++
++} //namespace QGst
++
++QGST_REGISTER_TYPE(QGst::Device)
++
++#endif
+diff --git a/src/QGst/devicemonitor.cpp b/src/QGst/devicemonitor.cpp
+new file mode 100644
+index 0000000..d424e56
+--- /dev/null
++++ b/src/QGst/devicemonitor.cpp
+@@ -0,0 +1,71 @@
++/*
++    Copyright (C) 2015  Pavel Bludov <pbludov@gmail.com>
++
++    This library is free software; you can redistribute it and/or modify
++    it under the terms of the GNU Lesser General Public License as published
++    by the Free Software Foundation; either version 2.1 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU Lesser General Public License for more details.
++
++    You should have received a copy of the GNU Lesser General Public License
++    along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++#include "global.h"
++#include "devicemonitor.h"
++#include <gst/gst.h>
++
++namespace QGst {
++
++//static
++DeviceMonitorPtr DeviceMonitor::create()
++{
++    GstDeviceMonitor *m = gst_device_monitor_new();
++    if (m) {
++        gst_object_ref_sink(m);
++    }
++    return DeviceMonitorPtr::wrap(m, false);
++}
++
++BusPtr DeviceMonitor::bus() const
++{
++    return BusPtr::wrap(gst_device_monitor_get_bus(object<GstDeviceMonitor>()), false);
++}
++
++quint32 DeviceMonitor::addFilter(const char* classes, const CapsPtr & caps)
++{
++    return gst_device_monitor_add_filter(object<GstDeviceMonitor>(), classes, caps);
++}
++
++bool DeviceMonitor::removeFilter(quint32 filterId)
++{
++    return gst_device_monitor_remove_filter(object<GstDeviceMonitor>(), filterId);
++}
++
++bool DeviceMonitor::start()
++{
++    return gst_device_monitor_start(object<GstDeviceMonitor>());
++}
++
++void DeviceMonitor::stop()
++{
++    gst_device_monitor_stop(object<GstDeviceMonitor>());
++}
++
++QList<DevicePtr> DeviceMonitor::devices() const
++{
++    QList<DevicePtr> output;
++    GList *input = gst_device_monitor_get_devices(object<GstDeviceMonitor>());
++
++    while (input) {
++        output += DevicePtr::wrap(GST_DEVICE(input->data), false);
++        input = g_list_delete_link(input, input);
++    }
++
++    return output;
++}
++
++}
+diff --git a/src/QGst/devicemonitor.h b/src/QGst/devicemonitor.h
+new file mode 100644
+index 0000000..5bb2083
+--- /dev/null
++++ b/src/QGst/devicemonitor.h
+@@ -0,0 +1,53 @@
++/*
++    Copyright (C) 2015  Pavel Bludov <pbludov@gmail.com>
++
++    This library is free software; you can redistribute it and/or modify
++    it under the terms of the GNU Lesser General Public License as published
++    by the Free Software Foundation; either version 2.1 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU Lesser General Public License for more details.
++
++    You should have received a copy of the GNU Lesser General Public License
++    along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++#ifndef QGST_DEVICEMONITOR_H
++#define QGST_DEVICEMONITOR_H
++
++#include "bus.h"
++#include "caps.h"
++#include "device.h"
++#include "object.h"
++
++namespace QGst {
++
++/*! \headerfile devicemonitor.h <QGst/DeviceMonitor>
++ * \brief Wrapper class for GstDeviceMonitor
++ * 
++ * A device monitor and prober
++ */
++class QTGSTREAMER_EXPORT DeviceMonitor : public Object
++{
++    QGST_WRAPPER(DeviceMonitor)
++public:
++    static DeviceMonitorPtr create();
++
++    BusPtr bus() const;
++
++    quint32 addFilter(const char* classes, const CapsPtr & caps);
++    bool removeFilter(quint32 filterId);
++
++    bool start();
++    void stop();
++    
++    QList<DevicePtr> devices() const;
++};
++
++}
++
++QGST_REGISTER_TYPE(QGst::DeviceMonitor)
++
++#endif
+diff --git a/src/QGst/enums.h b/src/QGst/enums.h
+index fe8f08d..6cd0d71 100644
+--- a/src/QGst/enums.h
++++ b/src/QGst/enums.h
+@@ -193,6 +193,15 @@ namespace QGst {
+         MessageRequestState    = (1 << 22),
+         MessageStepStart       = (1 << 23),
+         MessageQos             = (1 << 24),
++        MessageProgress        = (1 << 25),
++        MessageToc             = (1 << 26),
++        MessageResetTime       = (1 << 27),
++        MessageStreamStart     = (1 << 28),
++        MessageNeedContext     = (1 << 29),
++        MessageHaveContext     = (1 << 30),
++        MessageExtended        = (1 << 31),
++        MessageDeviceAdded   /*= MessageExtended + 1*/,
++        MessageDeviceRemoved /*= MessageExtended + 2*/,
+         MessageAny             = ~0
+     };
+ }
+diff --git a/src/QGst/gen.cpp b/src/QGst/gen.cpp
+index c8de4e7..fec9147 100644
+--- a/src/QGst/gen.cpp
++++ b/src/QGst/gen.cpp
+@@ -37,75 +37,14 @@
+ #include <gst/pbutils/gstdiscoverer.h>
+ #include <gst/pbutils/pbutils-enumtypes.h>
+ #include <QGlib/Quark>
+-#include "QGst/objectstore_p.h"
+-
+-#include "QGst/message.h"
++#include "QGst/urihandler.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Message,GST_TYPE_MESSAGE)
++REGISTER_TYPE_IMPLEMENTATION(QGst::UriHandler,GST_TYPE_URI_HANDLER)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *Message_new(void *instance)
++  QGlib::RefCountedObject *UriHandler_new(void *instance)
+   {
+-    QGst::Message *cppClass = NULL;
+-    switch(GST_MESSAGE_TYPE(instance)) {
+-    case QGst::MessageEos:
+-      cppClass = new QGst::EosMessage;
+-      break;
+-    case QGst::MessageError:
+-      cppClass = new QGst::ErrorMessage;
+-      break;
+-    case QGst::MessageWarning:
+-      cppClass = new QGst::WarningMessage;
+-      break;
+-    case QGst::MessageInfo:
+-      cppClass = new QGst::InfoMessage;
+-      break;
+-    case QGst::MessageTag:
+-      cppClass = new QGst::TagMessage;
+-      break;
+-    case QGst::MessageBuffering:
+-      cppClass = new QGst::BufferingMessage;
+-      break;
+-    case QGst::MessageStateChanged:
+-      cppClass = new QGst::StateChangedMessage;
+-      break;
+-    case QGst::MessageStepDone:
+-      cppClass = new QGst::StepDoneMessage;
+-      break;
+-    case QGst::MessageStreamStatus:
+-      cppClass = new QGst::StreamStatusMessage;
+-      break;
+-    case QGst::MessageApplication:
+-      cppClass = new QGst::ApplicationMessage;
+-      break;
+-    case QGst::MessageElement:
+-      cppClass = new QGst::ElementMessage;
+-      break;
+-    case QGst::MessageSegmentDone:
+-      cppClass = new QGst::SegmentDoneMessage;
+-      break;
+-    case QGst::MessageDurationChanged:
+-      cppClass = new QGst::DurationChangedMessage;
+-      break;
+-    case QGst::MessageLatency:
+-      cppClass = new QGst::LatencyMessage;
+-      break;
+-    case QGst::MessageAsyncDone:
+-      cppClass = new QGst::AsyncDoneMessage;
+-      break;
+-    case QGst::MessageRequestState:
+-      cppClass = new QGst::RequestStateMessage;
+-      break;
+-    case QGst::MessageStepStart:
+-      cppClass = new QGst::StepStartMessage;
+-      break;
+-    case QGst::MessageQos:
+-      cppClass = new QGst::QosMessage;
+-      break;
+-    default:
+-      cppClass = new QGst::Message;
+-      break;
+-    }
++    QGst::UriHandler *cppClass = new QGst::UriHandler;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+@@ -124,22 +63,7 @@ namespace QGst {
+   }
+ } //namespace QGst
+ 
+-#include "QGst/videoorientation.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::VideoOrientation,GST_TYPE_VIDEO_ORIENTATION)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *VideoOrientation_new(void *instance)
+-  {
+-    QGst::VideoOrientation *cppClass = new QGst::VideoOrientation;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/structure.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Structure,GST_TYPE_STRUCTURE)
++#include "QGst/parse.h"
+ 
+ #include "QGst/clock.h"
+ 
+@@ -154,323 +78,122 @@ namespace QGst {
+   }
+ } //namespace QGst
+ 
+-#include "QGst/childproxy.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::ChildProxy,GST_TYPE_CHILD_PROXY)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *ChildProxy_new(void *instance)
+-  {
+-    QGst::ChildProxy *cppClass = new QGst::ChildProxy;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/query.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Query,GST_TYPE_QUERY)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Query_new(void *instance)
+-  {
+-    QGst::Query *cppClass = NULL;
+-    switch(GST_QUERY_TYPE(instance)) {
+-    case QGst::QueryPosition:
+-      cppClass = new QGst::PositionQuery;
+-      break;
+-    case QGst::QueryDuration:
+-      cppClass = new QGst::DurationQuery;
+-      break;
+-    case QGst::QueryLatency:
+-      cppClass = new QGst::LatencyQuery;
+-      break;
+-    case QGst::QuerySeeking:
+-      cppClass = new QGst::SeekingQuery;
+-      break;
+-    case QGst::QuerySegment:
+-      cppClass = new QGst::SegmentQuery;
+-      break;
+-    case QGst::QueryConvert:
+-      cppClass = new QGst::ConvertQuery;
+-      break;
+-    case QGst::QueryFormats:
+-      cppClass = new QGst::FormatsQuery;
+-      break;
+-    case QGst::QueryBuffering:
+-      cppClass = new QGst::BufferingQuery;
+-      break;
+-    case QGst::QueryUri:
+-      cppClass = new QGst::UriQuery;
+-      break;
+-    default:
+-      cppClass = new QGst::Query;
+-      break;
+-    }
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/pipeline.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Pipeline,GST_TYPE_PIPELINE)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Pipeline_new(void *instance)
+-  {
+-    QGst::Pipeline *cppClass = new QGst::Pipeline;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/streamvolume.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::StreamVolume,GST_TYPE_STREAM_VOLUME)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *StreamVolume_new(void *instance)
+-  {
+-    QGst::StreamVolume *cppClass = new QGst::StreamVolume;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/structs.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Fourcc,G_TYPE_UINT)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Fraction,GST_TYPE_FRACTION)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::IntRange,GST_TYPE_INT_RANGE)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Int64Range,GST_TYPE_INT64_RANGE)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DoubleRange,GST_TYPE_DOUBLE_RANGE)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::FractionRange,GST_TYPE_FRACTION_RANGE)
+-
+-#include "QGst/caps.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Caps,GST_TYPE_CAPS)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Caps_new(void *instance)
+-  {
+-    QGst::Caps *cppClass = new QGst::Caps;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/miniobject.h"
+-
+-#include "QGst/event.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Event,GST_TYPE_EVENT)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Event_new(void *instance)
+-  {
+-    QGst::Event *cppClass = NULL;
+-    switch(GST_EVENT_TYPE(instance)) {
+-    case QGst::EventFlushStart:
+-      cppClass = new QGst::FlushStartEvent;
+-      break;
+-    case QGst::EventFlushStop:
+-      cppClass = new QGst::FlushStopEvent;
+-      break;
+-    case QGst::EventEos:
+-      cppClass = new QGst::EosEvent;
+-      break;
+-    case QGst::EventCaps:
+-      cppClass = new QGst::CapsEvent;
+-      break;
+-    case QGst::EventSegment:
+-      cppClass = new QGst::SegmentEvent;
+-      break;
+-    case QGst::EventTag:
+-      cppClass = new QGst::TagEvent;
+-      break;
+-    case QGst::EventBufferSize:
+-      cppClass = new QGst::BufferSizeEvent;
+-      break;
+-    case QGst::EventSinkMessage:
+-      cppClass = new QGst::SinkMessageEvent;
+-      break;
+-    case QGst::EventQos:
+-      cppClass = new QGst::QosEvent;
+-      break;
+-    case QGst::EventSeek:
+-      cppClass = new QGst::SeekEvent;
+-      break;
+-    case QGst::EventNavigation:
+-      cppClass = new QGst::NavigationEvent;
+-      break;
+-    case QGst::EventLatency:
+-      cppClass = new QGst::LatencyEvent;
+-      break;
+-    case QGst::EventStep:
+-      cppClass = new QGst::StepEvent;
+-      break;
+-    default:
+-      cppClass = new QGst::Event;
+-      break;
+-    }
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/memory.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Memory,GST_TYPE_MEMORY)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Memory_new(void *instance)
+-  {
+-    QGst::Memory *cppClass = new QGst::Memory;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/element.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Element,GST_TYPE_ELEMENT)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Element_new(void *instance)
+-  {
+-    QGst::Element *cppClass = new QGst::Element;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/taglist.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::TagList,GST_TYPE_TAG_LIST)
+-
+-#include "QGst/allocator.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Allocator,GST_TYPE_ALLOCATOR)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *Allocator_new(void *instance)
+-  {
+-    QGst::Allocator *cppClass = new QGst::Allocator;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/clocktime.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::ClockTime,GST_TYPE_CLOCK_TIME)
+-
+-#include "QGst/pluginfeature.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::PluginFeature,GST_TYPE_PLUGIN_FEATURE)
+-
+-namespace QGst {
+-  QGlib::RefCountedObject *PluginFeature_new(void *instance)
+-  {
+-    QGst::PluginFeature *cppClass = new QGst::PluginFeature;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
+-
+-#include "QGst/discoverer.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererStreamInfo,GST_TYPE_DISCOVERER_STREAM_INFO)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererContainerInfo,GST_TYPE_DISCOVERER_CONTAINER_INFO)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererAudioInfo,GST_TYPE_DISCOVERER_AUDIO_INFO)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererVideoInfo,GST_TYPE_DISCOVERER_VIDEO_INFO)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererSubtitleInfo,GST_TYPE_DISCOVERER_SUBTITLE_INFO)
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererInfo,GST_TYPE_DISCOVERER_INFO)
++#include "QGst/segment.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Discoverer,GST_TYPE_DISCOVERER)
++REGISTER_TYPE_IMPLEMENTATION(QGst::Segment,GST_TYPE_SEGMENT)
+ 
+-namespace QGst {
+-  QGlib::RefCountedObject *DiscovererStreamInfo_new(void *instance)
+-  {
+-    QGst::DiscovererStreamInfo *cppClass = new QGst::DiscovererStreamInfo;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
++#include "QGst/videooverlay.h"
+ 
+-namespace QGst {
+-  QGlib::RefCountedObject *DiscovererContainerInfo_new(void *instance)
+-  {
+-    QGst::DiscovererContainerInfo *cppClass = new QGst::DiscovererContainerInfo;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
++REGISTER_TYPE_IMPLEMENTATION(QGst::VideoOverlay,GST_TYPE_VIDEO_OVERLAY)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *DiscovererAudioInfo_new(void *instance)
++  QGlib::RefCountedObject *VideoOverlay_new(void *instance)
+   {
+-    QGst::DiscovererAudioInfo *cppClass = new QGst::DiscovererAudioInfo;
++    QGst::VideoOverlay *cppClass = new QGst::VideoOverlay;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-namespace QGst {
+-  QGlib::RefCountedObject *DiscovererVideoInfo_new(void *instance)
+-  {
+-    QGst::DiscovererVideoInfo *cppClass = new QGst::DiscovererVideoInfo;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
++#include "QGst/sample.h"
+ 
+-namespace QGst {
+-  QGlib::RefCountedObject *DiscovererSubtitleInfo_new(void *instance)
+-  {
+-    QGst::DiscovererSubtitleInfo *cppClass = new QGst::DiscovererSubtitleInfo;
+-    cppClass->m_object = instance;
+-    return cppClass;
+-  }
+-} //namespace QGst
++REGISTER_TYPE_IMPLEMENTATION(QGst::Sample,GST_TYPE_SAMPLE)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *DiscovererInfo_new(void *instance)
++  QGlib::RefCountedObject *Sample_new(void *instance)
+   {
+-    QGst::DiscovererInfo *cppClass = new QGst::DiscovererInfo;
++    QGst::Sample *cppClass = new QGst::Sample;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
++#include "QGst/message.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Message,GST_TYPE_MESSAGE)
++
+ namespace QGst {
+-  QGlib::RefCountedObject *Discoverer_new(void *instance)
++  QGlib::RefCountedObject *Message_new(void *instance)
+   {
+-    QGst::Discoverer *cppClass = new QGst::Discoverer;
++    QGst::Message *cppClass = NULL;
++    switch(GST_MESSAGE_TYPE(instance)) {
++    case QGst::MessageEos:
++      cppClass = new QGst::EosMessage;
++      break;
++    case QGst::MessageError:
++      cppClass = new QGst::ErrorMessage;
++      break;
++    case QGst::MessageWarning:
++      cppClass = new QGst::WarningMessage;
++      break;
++    case QGst::MessageInfo:
++      cppClass = new QGst::InfoMessage;
++      break;
++    case QGst::MessageTag:
++      cppClass = new QGst::TagMessage;
++      break;
++    case QGst::MessageBuffering:
++      cppClass = new QGst::BufferingMessage;
++      break;
++    case QGst::MessageStateChanged:
++      cppClass = new QGst::StateChangedMessage;
++      break;
++    case QGst::MessageStepDone:
++      cppClass = new QGst::StepDoneMessage;
++      break;
++    case QGst::MessageStreamStatus:
++      cppClass = new QGst::StreamStatusMessage;
++      break;
++    case QGst::MessageApplication:
++      cppClass = new QGst::ApplicationMessage;
++      break;
++    case QGst::MessageElement:
++      cppClass = new QGst::ElementMessage;
++      break;
++    case QGst::MessageSegmentDone:
++      cppClass = new QGst::SegmentDoneMessage;
++      break;
++    case QGst::MessageDurationChanged:
++      cppClass = new QGst::DurationChangedMessage;
++      break;
++    case QGst::MessageLatency:
++      cppClass = new QGst::LatencyMessage;
++      break;
++    case QGst::MessageAsyncDone:
++      cppClass = new QGst::AsyncDoneMessage;
++      break;
++    case QGst::MessageRequestState:
++      cppClass = new QGst::RequestStateMessage;
++      break;
++    case QGst::MessageStepStart:
++      cppClass = new QGst::StepStartMessage;
++      break;
++    case QGst::MessageQos:
++      cppClass = new QGst::QosMessage;
++      break;
++    case QGst::MessageDeviceAdded:
++      cppClass = new QGst::DeviceAddedMessage;
++      break;
++    case QGst::MessageDeviceRemoved:
++      cppClass = new QGst::DeviceRemovedMessage;
++      break;
++    default:
++      cppClass = new QGst::Message;
++      break;
++    }
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/urihandler.h"
++#include "QGst/bufferlist.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::UriHandler,GST_TYPE_URI_HANDLER)
++REGISTER_TYPE_IMPLEMENTATION(QGst::BufferList,GST_TYPE_BUFFER_LIST)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *UriHandler_new(void *instance)
++  QGlib::RefCountedObject *BufferList_new(void *instance)
+   {
+-    QGst::UriHandler *cppClass = new QGst::UriHandler;
++    QGst::BufferList *cppClass = new QGst::BufferList;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+@@ -663,6 +386,15 @@ namespace QGst {
+     BOOST_STATIC_ASSERT(static_cast<int>(MessageRequestState) == static_cast<int>(GST_MESSAGE_REQUEST_STATE));
+     BOOST_STATIC_ASSERT(static_cast<int>(MessageStepStart) == static_cast<int>(GST_MESSAGE_STEP_START));
+     BOOST_STATIC_ASSERT(static_cast<int>(MessageQos) == static_cast<int>(GST_MESSAGE_QOS));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageProgress) == static_cast<int>(GST_MESSAGE_PROGRESS));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageToc) == static_cast<int>(GST_MESSAGE_TOC));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageResetTime) == static_cast<int>(GST_MESSAGE_RESET_TIME));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageStreamStart) == static_cast<int>(GST_MESSAGE_STREAM_START));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageNeedContext) == static_cast<int>(GST_MESSAGE_NEED_CONTEXT));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageHaveContext) == static_cast<int>(GST_MESSAGE_HAVE_CONTEXT));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageExtended) == static_cast<int>(GST_MESSAGE_EXTENDED));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageDeviceAdded) == static_cast<int>(GST_MESSAGE_DEVICE_ADDED));
++    BOOST_STATIC_ASSERT(static_cast<int>(MessageDeviceRemoved) == static_cast<int>(GST_MESSAGE_DEVICE_REMOVED));
+     BOOST_STATIC_ASSERT(static_cast<int>(MessageAny) == static_cast<int>(GST_MESSAGE_ANY));
+ }
+ 
+@@ -878,7 +610,161 @@ namespace QGst {
+     BOOST_STATIC_ASSERT(static_cast<int>(MemoryFlagLast) == static_cast<int>(GST_MEMORY_FLAG_LAST));
+ }
+ 
+-#include "QGst/parse.h"
++#include "QGst/objectstore_p.h"
++
++#include "QGst/ghostpad.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::GhostPad,GST_TYPE_GHOST_PAD)
++
++namespace QGst {
++  QGlib::RefCountedObject *GhostPad_new(void *instance)
++  {
++    QGst::GhostPad *cppClass = new QGst::GhostPad;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/pluginfeature.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::PluginFeature,GST_TYPE_PLUGIN_FEATURE)
++
++namespace QGst {
++  QGlib::RefCountedObject *PluginFeature_new(void *instance)
++  {
++    QGst::PluginFeature *cppClass = new QGst::PluginFeature;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/taglist.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::TagList,GST_TYPE_TAG_LIST)
++
++#include "QGst/memory.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Memory,GST_TYPE_MEMORY)
++
++namespace QGst {
++  QGlib::RefCountedObject *Memory_new(void *instance)
++  {
++    QGst::Memory *cppClass = new QGst::Memory;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/object.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Object,GST_TYPE_OBJECT)
++
++namespace QGst {
++  QGlib::RefCountedObject *Object_new(void *instance)
++  {
++    QGst::Object *cppClass = new QGst::Object;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/videoorientation.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::VideoOrientation,GST_TYPE_VIDEO_ORIENTATION)
++
++namespace QGst {
++  QGlib::RefCountedObject *VideoOrientation_new(void *instance)
++  {
++    QGst::VideoOrientation *cppClass = new QGst::VideoOrientation;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/bus.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Bus,GST_TYPE_BUS)
++
++namespace QGst {
++  QGlib::RefCountedObject *Bus_new(void *instance)
++  {
++    QGst::Bus *cppClass = new QGst::Bus;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/pipeline.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Pipeline,GST_TYPE_PIPELINE)
++
++namespace QGst {
++  QGlib::RefCountedObject *Pipeline_new(void *instance)
++  {
++    QGst::Pipeline *cppClass = new QGst::Pipeline;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/structs.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Fourcc,G_TYPE_UINT)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Fraction,GST_TYPE_FRACTION)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::IntRange,GST_TYPE_INT_RANGE)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Int64Range,GST_TYPE_INT64_RANGE)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::DoubleRange,GST_TYPE_DOUBLE_RANGE)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::FractionRange,GST_TYPE_FRACTION_RANGE)
++
++#include "QGst/structure.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Structure,GST_TYPE_STRUCTURE)
++
++#include "QGst/childproxy.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::ChildProxy,GST_TYPE_CHILD_PROXY)
++
++namespace QGst {
++  QGlib::RefCountedObject *ChildProxy_new(void *instance)
++  {
++    QGst::ChildProxy *cppClass = new QGst::ChildProxy;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/bin.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Bin,GST_TYPE_BIN)
++
++namespace QGst {
++  QGlib::RefCountedObject *Bin_new(void *instance)
++  {
++    QGst::Bin *cppClass = new QGst::Bin;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++
++
++#include "QGst/element.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Element,GST_TYPE_ELEMENT)
++
++namespace QGst {
++  QGlib::RefCountedObject *Element_new(void *instance)
++  {
++    QGst::Element *cppClass = new QGst::Element;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
+ 
+ #include "QGst/colorbalance.h"
+ 
+@@ -887,167 +773,333 @@ REGISTER_TYPE_IMPLEMENTATION(QGst::ColorBalanceChannel,GST_TYPE_COLOR_BALANCE_CH
+ REGISTER_TYPE_IMPLEMENTATION(QGst::ColorBalance,GST_TYPE_COLOR_BALANCE)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *ColorBalanceChannel_new(void *instance)
++  QGlib::RefCountedObject *ColorBalanceChannel_new(void *instance)
++  {
++    QGst::ColorBalanceChannel *cppClass = new QGst::ColorBalanceChannel;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++namespace QGst {
++  QGlib::RefCountedObject *ColorBalance_new(void *instance)
++  {
++    QGst::ColorBalance *cppClass = new QGst::ColorBalance;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
++
++#include "QGst/caps.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Caps,GST_TYPE_CAPS)
++
++namespace QGst {
++  QGlib::RefCountedObject *Caps_new(void *instance)
+   {
+-    QGst::ColorBalanceChannel *cppClass = new QGst::ColorBalanceChannel;
++    QGst::Caps *cppClass = new QGst::Caps;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
++#include "QGst/init.h"
++
++#include "QGst/buffer.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Buffer,GST_TYPE_BUFFER)
++
+ namespace QGst {
+-  QGlib::RefCountedObject *ColorBalance_new(void *instance)
++  QGlib::RefCountedObject *Buffer_new(void *instance)
+   {
+-    QGst::ColorBalance *cppClass = new QGst::ColorBalance;
++    QGst::Buffer *cppClass = new QGst::Buffer;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/videooverlay.h"
++#include "QGst/allocator.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::VideoOverlay,GST_TYPE_VIDEO_OVERLAY)
++REGISTER_TYPE_IMPLEMENTATION(QGst::Allocator,GST_TYPE_ALLOCATOR)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *VideoOverlay_new(void *instance)
++  QGlib::RefCountedObject *Allocator_new(void *instance)
+   {
+-    QGst::VideoOverlay *cppClass = new QGst::VideoOverlay;
++    QGst::Allocator *cppClass = new QGst::Allocator;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/buffer.h"
++#include "QGst/devicemonitor.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Buffer,GST_TYPE_BUFFER)
++REGISTER_TYPE_IMPLEMENTATION(QGst::DeviceMonitor,GST_TYPE_DEVICE_MONITOR)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *Buffer_new(void *instance)
++  QGlib::RefCountedObject *DeviceMonitor_new(void *instance)
+   {
+-    QGst::Buffer *cppClass = new QGst::Buffer;
++    QGst::DeviceMonitor *cppClass = new QGst::DeviceMonitor;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/ghostpad.h"
++#include "QGst/device.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::GhostPad,GST_TYPE_GHOST_PAD)
++REGISTER_TYPE_IMPLEMENTATION(QGst::Device,GST_TYPE_DEVICE)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *GhostPad_new(void *instance)
++  QGlib::RefCountedObject *Device_new(void *instance)
+   {
+-    QGst::GhostPad *cppClass = new QGst::GhostPad;
++    QGst::Device *cppClass = new QGst::Device;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/elementfactory.h"
++#include "QGst/clocktime.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::ElementFactory,GST_TYPE_ELEMENT_FACTORY)
++REGISTER_TYPE_IMPLEMENTATION(QGst::ClockTime,GST_TYPE_CLOCK_TIME)
++
++#include "QGst/event.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Event,GST_TYPE_EVENT)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *ElementFactory_new(void *instance)
++  QGlib::RefCountedObject *Event_new(void *instance)
+   {
+-    QGst::ElementFactory *cppClass = new QGst::ElementFactory;
++    QGst::Event *cppClass = NULL;
++    switch(GST_EVENT_TYPE(instance)) {
++    case QGst::EventFlushStart:
++      cppClass = new QGst::FlushStartEvent;
++      break;
++    case QGst::EventFlushStop:
++      cppClass = new QGst::FlushStopEvent;
++      break;
++    case QGst::EventEos:
++      cppClass = new QGst::EosEvent;
++      break;
++    case QGst::EventCaps:
++      cppClass = new QGst::CapsEvent;
++      break;
++    case QGst::EventSegment:
++      cppClass = new QGst::SegmentEvent;
++      break;
++    case QGst::EventTag:
++      cppClass = new QGst::TagEvent;
++      break;
++    case QGst::EventBufferSize:
++      cppClass = new QGst::BufferSizeEvent;
++      break;
++    case QGst::EventSinkMessage:
++      cppClass = new QGst::SinkMessageEvent;
++      break;
++    case QGst::EventQos:
++      cppClass = new QGst::QosEvent;
++      break;
++    case QGst::EventSeek:
++      cppClass = new QGst::SeekEvent;
++      break;
++    case QGst::EventNavigation:
++      cppClass = new QGst::NavigationEvent;
++      break;
++    case QGst::EventLatency:
++      cppClass = new QGst::LatencyEvent;
++      break;
++    case QGst::EventStep:
++      cppClass = new QGst::StepEvent;
++      break;
++    default:
++      cppClass = new QGst::Event;
++      break;
++    }
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/sample.h"
++#include "QGst/discoverer.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Sample,GST_TYPE_SAMPLE)
++REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererStreamInfo,GST_TYPE_DISCOVERER_STREAM_INFO)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererContainerInfo,GST_TYPE_DISCOVERER_CONTAINER_INFO)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererAudioInfo,GST_TYPE_DISCOVERER_AUDIO_INFO)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererVideoInfo,GST_TYPE_DISCOVERER_VIDEO_INFO)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererSubtitleInfo,GST_TYPE_DISCOVERER_SUBTITLE_INFO)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::DiscovererInfo,GST_TYPE_DISCOVERER_INFO)
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Discoverer,GST_TYPE_DISCOVERER)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *Sample_new(void *instance)
++  QGlib::RefCountedObject *DiscovererStreamInfo_new(void *instance)
+   {
+-    QGst::Sample *cppClass = new QGst::Sample;
++    QGst::DiscovererStreamInfo *cppClass = new QGst::DiscovererStreamInfo;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/bin.h"
+-
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Bin,GST_TYPE_BIN)
++namespace QGst {
++  QGlib::RefCountedObject *DiscovererContainerInfo_new(void *instance)
++  {
++    QGst::DiscovererContainerInfo *cppClass = new QGst::DiscovererContainerInfo;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *Bin_new(void *instance)
++  QGlib::RefCountedObject *DiscovererAudioInfo_new(void *instance)
+   {
+-    QGst::Bin *cppClass = new QGst::Bin;
++    QGst::DiscovererAudioInfo *cppClass = new QGst::DiscovererAudioInfo;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
++namespace QGst {
++  QGlib::RefCountedObject *DiscovererVideoInfo_new(void *instance)
++  {
++    QGst::DiscovererVideoInfo *cppClass = new QGst::DiscovererVideoInfo;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
+ 
++namespace QGst {
++  QGlib::RefCountedObject *DiscovererSubtitleInfo_new(void *instance)
++  {
++    QGst::DiscovererSubtitleInfo *cppClass = new QGst::DiscovererSubtitleInfo;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
+ 
+-#include "QGst/segment.h"
++namespace QGst {
++  QGlib::RefCountedObject *DiscovererInfo_new(void *instance)
++  {
++    QGst::DiscovererInfo *cppClass = new QGst::DiscovererInfo;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Segment,GST_TYPE_SEGMENT)
++namespace QGst {
++  QGlib::RefCountedObject *Discoverer_new(void *instance)
++  {
++    QGst::Discoverer *cppClass = new QGst::Discoverer;
++    cppClass->m_object = instance;
++    return cppClass;
++  }
++} //namespace QGst
+ 
+-#include "QGst/bufferlist.h"
++#include "QGst/elementfactory.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::BufferList,GST_TYPE_BUFFER_LIST)
++REGISTER_TYPE_IMPLEMENTATION(QGst::ElementFactory,GST_TYPE_ELEMENT_FACTORY)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *BufferList_new(void *instance)
++  QGlib::RefCountedObject *ElementFactory_new(void *instance)
+   {
+-    QGst::BufferList *cppClass = new QGst::BufferList;
++    QGst::ElementFactory *cppClass = new QGst::ElementFactory;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/object.h"
++#include "QGst/miniobject.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Object,GST_TYPE_OBJECT)
++#include "QGst/query.h"
++
++REGISTER_TYPE_IMPLEMENTATION(QGst::Query,GST_TYPE_QUERY)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *Object_new(void *instance)
++  QGlib::RefCountedObject *Query_new(void *instance)
+   {
+-    QGst::Object *cppClass = new QGst::Object;
++    QGst::Query *cppClass = NULL;
++    switch(GST_QUERY_TYPE(instance)) {
++    case QGst::QueryPosition:
++      cppClass = new QGst::PositionQuery;
++      break;
++    case QGst::QueryDuration:
++      cppClass = new QGst::DurationQuery;
++      break;
++    case QGst::QueryLatency:
++      cppClass = new QGst::LatencyQuery;
++      break;
++    case QGst::QuerySeeking:
++      cppClass = new QGst::SeekingQuery;
++      break;
++    case QGst::QuerySegment:
++      cppClass = new QGst::SegmentQuery;
++      break;
++    case QGst::QueryConvert:
++      cppClass = new QGst::ConvertQuery;
++      break;
++    case QGst::QueryFormats:
++      cppClass = new QGst::FormatsQuery;
++      break;
++    case QGst::QueryBuffering:
++      cppClass = new QGst::BufferingQuery;
++      break;
++    case QGst::QueryUri:
++      cppClass = new QGst::UriQuery;
++      break;
++    default:
++      cppClass = new QGst::Query;
++      break;
++    }
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/bus.h"
++#include "QGst/streamvolume.h"
+ 
+-REGISTER_TYPE_IMPLEMENTATION(QGst::Bus,GST_TYPE_BUS)
++REGISTER_TYPE_IMPLEMENTATION(QGst::StreamVolume,GST_TYPE_STREAM_VOLUME)
+ 
+ namespace QGst {
+-  QGlib::RefCountedObject *Bus_new(void *instance)
++  QGlib::RefCountedObject *StreamVolume_new(void *instance)
+   {
+-    QGst::Bus *cppClass = new QGst::Bus;
++    QGst::StreamVolume *cppClass = new QGst::StreamVolume;
+     cppClass->m_object = instance;
+     return cppClass;
+   }
+ } //namespace QGst
+ 
+-#include "QGst/init.h"
+-
+ namespace QGst {
+ namespace Private {
+   void registerWrapperConstructors()
+   {
+     QGlib::Quark q = g_quark_from_static_string("QGlib__wrapper_constructor");
+-    QGlib::GetType<Message>().setQuarkData(q, reinterpret_cast<void*>(&Message_new));
++    QGlib::GetType<UriHandler>().setQuarkData(q, reinterpret_cast<void*>(&UriHandler_new));
+     QGlib::GetType<Pad>().setQuarkData(q, reinterpret_cast<void*>(&Pad_new));
+-    QGlib::GetType<VideoOrientation>().setQuarkData(q, reinterpret_cast<void*>(&VideoOrientation_new));
+     QGlib::GetType<Clock>().setQuarkData(q, reinterpret_cast<void*>(&Clock_new));
+-    QGlib::GetType<ChildProxy>().setQuarkData(q, reinterpret_cast<void*>(&ChildProxy_new));
+-    QGlib::GetType<Query>().setQuarkData(q, reinterpret_cast<void*>(&Query_new));
+-    QGlib::GetType<Pipeline>().setQuarkData(q, reinterpret_cast<void*>(&Pipeline_new));
+-    QGlib::GetType<StreamVolume>().setQuarkData(q, reinterpret_cast<void*>(&StreamVolume_new));
+-    QGlib::GetType<Caps>().setQuarkData(q, reinterpret_cast<void*>(&Caps_new));
+-    QGlib::GetType<Event>().setQuarkData(q, reinterpret_cast<void*>(&Event_new));
++    QGlib::GetType<VideoOverlay>().setQuarkData(q, reinterpret_cast<void*>(&VideoOverlay_new));
++    QGlib::GetType<Sample>().setQuarkData(q, reinterpret_cast<void*>(&Sample_new));
++    QGlib::GetType<Message>().setQuarkData(q, reinterpret_cast<void*>(&Message_new));
++    QGlib::GetType<BufferList>().setQuarkData(q, reinterpret_cast<void*>(&BufferList_new));
++    QGlib::GetType<GhostPad>().setQuarkData(q, reinterpret_cast<void*>(&GhostPad_new));
++    QGlib::GetType<PluginFeature>().setQuarkData(q, reinterpret_cast<void*>(&PluginFeature_new));
+     QGlib::GetType<Memory>().setQuarkData(q, reinterpret_cast<void*>(&Memory_new));
++    QGlib::GetType<Object>().setQuarkData(q, reinterpret_cast<void*>(&Object_new));
++    QGlib::GetType<VideoOrientation>().setQuarkData(q, reinterpret_cast<void*>(&VideoOrientation_new));
++    QGlib::GetType<Bus>().setQuarkData(q, reinterpret_cast<void*>(&Bus_new));
++    QGlib::GetType<Pipeline>().setQuarkData(q, reinterpret_cast<void*>(&Pipeline_new));
++    QGlib::GetType<ChildProxy>().setQuarkData(q, reinterpret_cast<void*>(&ChildProxy_new));
++    QGlib::GetType<Bin>().setQuarkData(q, reinterpret_cast<void*>(&Bin_new));
+     QGlib::GetType<Element>().setQuarkData(q, reinterpret_cast<void*>(&Element_new));
++    QGlib::GetType<ColorBalanceChannel>().setQuarkData(q, reinterpret_cast<void*>(&ColorBalanceChannel_new));
++    QGlib::GetType<ColorBalance>().setQuarkData(q, reinterpret_cast<void*>(&ColorBalance_new));
++    QGlib::GetType<Caps>().setQuarkData(q, reinterpret_cast<void*>(&Caps_new));
++    QGlib::GetType<Buffer>().setQuarkData(q, reinterpret_cast<void*>(&Buffer_new));
+     QGlib::GetType<Allocator>().setQuarkData(q, reinterpret_cast<void*>(&Allocator_new));
+-    QGlib::GetType<PluginFeature>().setQuarkData(q, reinterpret_cast<void*>(&PluginFeature_new));
++    QGlib::GetType<DeviceMonitor>().setQuarkData(q, reinterpret_cast<void*>(&DeviceMonitor_new));
++    QGlib::GetType<Device>().setQuarkData(q, reinterpret_cast<void*>(&Device_new));
++    QGlib::GetType<Event>().setQuarkData(q, reinterpret_cast<void*>(&Event_new));
+     QGlib::GetType<DiscovererStreamInfo>().setQuarkData(q, reinterpret_cast<void*>(&DiscovererStreamInfo_new));
+     QGlib::GetType<DiscovererContainerInfo>().setQuarkData(q, reinterpret_cast<void*>(&DiscovererContainerInfo_new));
+     QGlib::GetType<DiscovererAudioInfo>().setQuarkData(q, reinterpret_cast<void*>(&DiscovererAudioInfo_new));
+@@ -1055,18 +1107,9 @@ namespace Private {
+     QGlib::GetType<DiscovererSubtitleInfo>().setQuarkData(q, reinterpret_cast<void*>(&DiscovererSubtitleInfo_new));
+     QGlib::GetType<DiscovererInfo>().setQuarkData(q, reinterpret_cast<void*>(&DiscovererInfo_new));
+     QGlib::GetType<Discoverer>().setQuarkData(q, reinterpret_cast<void*>(&Discoverer_new));
+-    QGlib::GetType<UriHandler>().setQuarkData(q, reinterpret_cast<void*>(&UriHandler_new));
+-    QGlib::GetType<ColorBalanceChannel>().setQuarkData(q, reinterpret_cast<void*>(&ColorBalanceChannel_new));
+-    QGlib::GetType<ColorBalance>().setQuarkData(q, reinterpret_cast<void*>(&ColorBalance_new));
+-    QGlib::GetType<VideoOverlay>().setQuarkData(q, reinterpret_cast<void*>(&VideoOverlay_new));
+-    QGlib::GetType<Buffer>().setQuarkData(q, reinterpret_cast<void*>(&Buffer_new));
+-    QGlib::GetType<GhostPad>().setQuarkData(q, reinterpret_cast<void*>(&GhostPad_new));
+     QGlib::GetType<ElementFactory>().setQuarkData(q, reinterpret_cast<void*>(&ElementFactory_new));
+-    QGlib::GetType<Sample>().setQuarkData(q, reinterpret_cast<void*>(&Sample_new));
+-    QGlib::GetType<Bin>().setQuarkData(q, reinterpret_cast<void*>(&Bin_new));
+-    QGlib::GetType<BufferList>().setQuarkData(q, reinterpret_cast<void*>(&BufferList_new));
+-    QGlib::GetType<Object>().setQuarkData(q, reinterpret_cast<void*>(&Object_new));
+-    QGlib::GetType<Bus>().setQuarkData(q, reinterpret_cast<void*>(&Bus_new));
++    QGlib::GetType<Query>().setQuarkData(q, reinterpret_cast<void*>(&Query_new));
++    QGlib::GetType<StreamVolume>().setQuarkData(q, reinterpret_cast<void*>(&StreamVolume_new));
+   }
+ } //namespace Private
+ } //namespace QGst
+diff --git a/src/QGst/global.h b/src/QGst/global.h
+index 9d8eefe..f5464b1 100644
+--- a/src/QGst/global.h
++++ b/src/QGst/global.h
+@@ -75,6 +75,8 @@ QGST_WRAPPER_DECLARATION(ChildProxy)
+ QGST_WRAPPER_DECLARATION(Clock)
+ QGST_WRAPPER_DECLARATION(ColorBalanceChannel)
+ QGST_WRAPPER_DECLARATION(ColorBalance)
++QGST_WRAPPER_DECLARATION(Device)
++QGST_WRAPPER_DECLARATION(DeviceMonitor)
+ QGST_WRAPPER_DECLARATION(Discoverer)
+ QGST_WRAPPER_DECLARATION(DiscovererInfo)
+ QGST_WRAPPER_DECLARATION(DiscovererStreamInfo)
+@@ -104,6 +106,8 @@ QGST_WRAPPER_REFPOINTER_DECLARATION(AsyncDoneMessage)
+ QGST_WRAPPER_REFPOINTER_DECLARATION(RequestStateMessage)
+ QGST_WRAPPER_REFPOINTER_DECLARATION(StepStartMessage)
+ QGST_WRAPPER_REFPOINTER_DECLARATION(QosMessage)
++QGST_WRAPPER_REFPOINTER_DECLARATION(DeviceAddedMessage)
++QGST_WRAPPER_REFPOINTER_DECLARATION(DeviceRemovedMessage)
+ QGST_WRAPPER_DECLARATION(MiniObject)
+ QGST_WRAPPER_DECLARATION(Object)
+ QGST_WRAPPER_DECLARATION(Pad)
+diff --git a/src/QGst/message.cpp b/src/QGst/message.cpp
+index e8b5a90..ae845cc 100644
+--- a/src/QGst/message.cpp
++++ b/src/QGst/message.cpp
+@@ -575,4 +575,34 @@ void QosMessage::setStats(Format format, quint64 processed, quint64 dropped)
+                               dropped);
+ }
+ 
++//********************************************************
++
++DeviceAddedMessagePtr DeviceAddedMessage::create(const ObjectPtr & source, const DevicePtr & device)
++{
++    GstMessage *m = gst_message_new_device_added(source, device);
++    return DeviceAddedMessagePtr::wrap(m, false);
++}
++
++DevicePtr DeviceAddedMessage::device() const
++{
++    GstDevice *d;
++    gst_message_parse_device_added(object<GstMessage>(), &d);
++    return DevicePtr::wrap(d, false);
++}
++
++//********************************************************
++
++DeviceRemovedMessagePtr DeviceRemovedMessage::create(const ObjectPtr & source, const DevicePtr & device)
++{
++    GstMessage *m = gst_message_new_device_removed(source, device);
++    return DeviceRemovedMessagePtr::wrap(m, false);
++}
++
++DevicePtr DeviceRemovedMessage::device() const
++{
++    GstDevice *d;
++    gst_message_parse_device_removed(object<GstMessage>(), &d);
++    return DevicePtr::wrap(d, false);
++}
++
+ } //namespace QGst
+diff --git a/src/QGst/message.h b/src/QGst/message.h
+index 7ed2bdf..cd489b7 100644
+--- a/src/QGst/message.h
++++ b/src/QGst/message.h
+@@ -18,6 +18,7 @@
+ #define QGST_MESSAGE_H
+ 
+ #include "clocktime.h"
++#include "device.h"
+ #include "miniobject.h"
+ #include "structure.h"
+ #include "taglist.h"
+@@ -325,6 +326,30 @@ public:
+     void setStats(Format format, quint64 processed, quint64 dropped);
+ };
+ 
++/*! \headerfile message.h <QGst/Message>
++ * \brief Wrapper class for messages of type QGst::MessageDeviceAdded
++ */
++class QTGSTREAMER_EXPORT DeviceAddedMessage : public Message
++{
++    QGST_WRAPPER_FAKE_SUBCLASS(DeviceAdded, Message)
++public:
++    static DeviceAddedMessagePtr create(const ObjectPtr & source, const DevicePtr& device);
++
++    DevicePtr device() const;
++};
++
++/*! \headerfile message.h <QGst/Message>
++ * \brief Wrapper class for messages of type QGst::MessageDeviceRemoved
++ */
++class QTGSTREAMER_EXPORT DeviceRemovedMessage : public Message
++{
++    QGST_WRAPPER_FAKE_SUBCLASS(DeviceRemoved, Message)
++public:
++    static DeviceRemovedMessagePtr create(const ObjectPtr & source, const DevicePtr& device);
++
++    DevicePtr device() const;
++};
++
+ } //namespace QGst
+ 
+ QGST_REGISTER_TYPE(QGst::Message)
+@@ -346,5 +371,7 @@ QGST_REGISTER_SUBCLASS(Message, AsyncDone)
+ QGST_REGISTER_SUBCLASS(Message, RequestState)
+ QGST_REGISTER_SUBCLASS(Message, StepStart)
+ QGST_REGISTER_SUBCLASS(Message, Qos)
++QGST_REGISTER_SUBCLASS(Message, DeviceAdded)
++QGST_REGISTER_SUBCLASS(Message, DeviceRemoved)
+ 
+ #endif
+-- 
+2.26.2
+

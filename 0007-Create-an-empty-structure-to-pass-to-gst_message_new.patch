@@ -1,7 +1,7 @@
 From c994209573c5b07e71276938aae212b40943f076 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
 Date: Tue, 7 Apr 2015 21:15:39 -0700
-Subject: [PATCH 06/16] Create an empty structure to pass to
+Subject: [PATCH 07/36] Create an empty structure to pass to
  gst_message_new_application if we don't have a valid one.
 
 When passed a NULL structure gst_message_new_application fails with
@@ -25,5 +25,5 @@ index a252562..3e7bb56 100644
  }
  
 -- 
-2.8.3
+2.26.2
 

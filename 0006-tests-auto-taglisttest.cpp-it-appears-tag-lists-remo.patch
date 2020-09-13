@@ -1,7 +1,7 @@
 From 53220ba158b74cf5d5bf27e03f7892a6629a8d50 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
 Date: Mon, 6 Apr 2015 21:54:41 -0700
-Subject: [PATCH 05/16] tests/auto/taglisttest.cpp: it appears tag lists remove
+Subject: [PATCH 06/36] tests/auto/taglisttest.cpp: it appears tag lists remove
  duplicates, so create a new buffer to make sure the image count is
  incremented
 
@@ -27,5 +27,5 @@ index 31dd1f2..1f649b8 100644
  
      tl.setAttachment(sample2, QGst::TagMergePrepend);
 -- 
-2.8.3
+2.26.2
 

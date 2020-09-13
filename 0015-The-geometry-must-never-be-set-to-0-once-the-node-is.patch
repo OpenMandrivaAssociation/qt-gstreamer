@@ -1,7 +1,7 @@
 From af4d94de093b114c5371bda522ec11075ead60ea Mon Sep 17 00:00:00 2001
 From: Niels Ole Salscheider <niels_ole@salscheider-online.de>
 Date: Sun, 6 Mar 2016 13:50:03 +0100
-Subject: [PATCH 14/16] The geometry must never be set to 0 once the node is
+Subject: [PATCH 15/36] The geometry must never be set to 0 once the node is
  added to the SG
 
 The application can crash otherwise.
@@ -86,5 +86,5 @@ index ed9d36f..8ba4c3b 100644
  
  #endif // VIDEONODE_H
 -- 
-2.8.3
+2.26.2
 

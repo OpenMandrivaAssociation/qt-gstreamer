@@ -1,0 +1,36 @@
+From 9740ed6ca478fcac8884f974dba7bc0f4e1d1898 Mon Sep 17 00:00:00 2001
+From: Aleix Pol <aleixpol@kde.org>
+Date: Tue, 23 Jan 2018 20:35:44 +0000
+Subject: [PATCH 21/36] Fix QtGStreamer lookup on Qt5
+
+No need to look-up the file, it will be in the current
+directory. If there's a different version it will have
+the same set of files. Also it includes the targets file,
+so that we can link against the exported targets as "Qt5GStreamer".
+
+https://bugzilla.gnome.org/show_bug.cgi?id=747247
+---
+ cmake/modules/QtGStreamerConfig.cmake.in | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/cmake/modules/QtGStreamerConfig.cmake.in b/cmake/modules/QtGStreamerConfig.cmake.in
+index 4b1f609..54c5456 100644
+--- a/cmake/modules/QtGStreamerConfig.cmake.in
++++ b/cmake/modules/QtGStreamerConfig.cmake.in
+@@ -67,11 +67,8 @@ endif()
+ 
+ unset(_QTGSTREAMER_FIND_DEPS_ARGS)
+ 
+-# include QtGStreamerConfigCommon.cmake from the same directory
+-find_file(_QTGSTREAMER_CONFIG_COMMON_FILE QtGStreamerConfigCommon.cmake
+-          PATHS ${_QTGSTREAMER_CONFIG_DIR} NO_DEFAULT_PATH)
+-include(${_QTGSTREAMER_CONFIG_COMMON_FILE})
+-unset(_QTGSTREAMER_CONFIG_COMMON_FILE)
++include("${CMAKE_CURRENT_LIST_DIR}/QtGStreamerConfigCommon.cmake")
++include("${CMAKE_CURRENT_LIST_DIR}/@QTGSTREAMER_PACKAGE_NAME@Targets.cmake")
+ 
+ # compatibility variable
+ set(QTGSTREAMER_FOUND ${@QTGSTREAMER_PACKAGE_NAME@_FOUND})
+-- 
+2.26.2
+

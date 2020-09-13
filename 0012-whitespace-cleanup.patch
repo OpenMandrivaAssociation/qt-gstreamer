@@ -1,7 +1,7 @@
 From 5c51c6271da6ad67e9cffa701d3f8b1684185bd1 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
 Date: Wed, 4 Nov 2015 15:35:36 -0800
-Subject: [PATCH 11/16] whitespace cleanup
+Subject: [PATCH 12/36] whitespace cleanup
 
 ---
  tests/auto/refpointertest.cpp | 2 +-
@@ -21,5 +21,5 @@ index 6fe065a..9a21e03 100644
  
  void RefPointerTest::messageDynamicCastTest()
 -- 
-2.8.3
+2.26.2
 

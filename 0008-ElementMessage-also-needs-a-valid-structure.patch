@@ -1,7 +1,7 @@
 From f3cc3fd8b40eb1d15987ddccacb2eb60d45d8cf0 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
 Date: Tue, 7 Apr 2015 21:26:03 -0700
-Subject: [PATCH 07/16] ElementMessage also needs a valid structure
+Subject: [PATCH 08/36] ElementMessage also needs a valid structure
 
 The solution is the same as for ApplicationMessage, and
 since it wasn't caught by the unit tests add a unit test.
@@ -48,5 +48,5 @@ index 7a509b7..6fe065a 100644
  
  void RefPointerTest::messageDynamicCastTest()
 -- 
-2.8.3
+2.26.2
 

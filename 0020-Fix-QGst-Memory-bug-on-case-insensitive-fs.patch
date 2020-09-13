@@ -1,0 +1,97 @@
+From fac0b07d22bcd0ad4ae82651ac430ede500b2d1a Mon Sep 17 00:00:00 2001
+From: ilovezfs <ilovezfs@icloud.com>
+Date: Fri, 6 May 2016 00:52:46 -0700
+Subject: [PATCH 20/36] Fix QGst/Memory bug on case-insensitive fs
+
+"Memory" collides with standard lib's "memory" on case-insensitive
+file systems.
+
+See https://bugzilla.gnome.org/show_bug.cgi?id=763201
+---
+ src/QGst/CMakeLists.txt         | 2 +-
+ src/QGst/{Memory => QGstMemory} | 1 -
+ src/QGst/memory.h               | 2 +-
+ tests/auto/allocatortest.cpp    | 2 +-
+ tests/auto/buffertest.cpp       | 2 +-
+ tests/auto/memorytest.cpp       | 2 +-
+ 6 files changed, 5 insertions(+), 6 deletions(-)
+ rename src/QGst/{Memory => QGstMemory} (95%)
+
+diff --git a/src/QGst/CMakeLists.txt b/src/QGst/CMakeLists.txt
+index b780fb8..a13f1f5 100644
+--- a/src/QGst/CMakeLists.txt
++++ b/src/QGst/CMakeLists.txt
+@@ -88,7 +88,7 @@ set(QtGStreamer_INSTALLED_HEADERS
+     buffer.h            Buffer
+     sample.h            Sample
+     allocator.h         Allocator
+-    memory.h            Memory
++    memory.h            QGstMemory
+     event.h             Event
+     clocktime.h         ClockTime
+     taglist.h           TagList
+diff --git a/src/QGst/Memory b/src/QGst/QGstMemory
+similarity index 95%
+rename from src/QGst/Memory
+rename to src/QGst/QGstMemory
+index 8c5815e..b31569d 100644
+--- a/src/QGst/Memory
++++ b/src/QGst/QGstMemory
+@@ -1,2 +1 @@
+ #include "memory.h"
+-
+diff --git a/src/QGst/memory.h b/src/QGst/memory.h
+index b895291..e3faaa8 100644
+--- a/src/QGst/memory.h
++++ b/src/QGst/memory.h
+@@ -41,7 +41,7 @@ private:
+     void *m_object;
+ };
+ 
+-/*! \headerfile memory.h <QGst/Memory>
++/*! \headerfile memory.h <QGst/QGstMemory>
+  *  \brief Wrapper class for GstMemory
+  *
+  * GstMemory is a lightweight refcounted object that wraps a region
+diff --git a/tests/auto/allocatortest.cpp b/tests/auto/allocatortest.cpp
+index 588f1bc..cfb4fc6 100644
+--- a/tests/auto/allocatortest.cpp
++++ b/tests/auto/allocatortest.cpp
+@@ -18,7 +18,7 @@
+ #include "qgsttest.h"
+ #include <QGlib/Error>
+ #include <QGst/Allocator>
+-#include <QGst/Memory>
++#include <QGst/QGstMemory>
+ 
+ class AllocatorTest : public QGstTest
+ {
+diff --git a/tests/auto/buffertest.cpp b/tests/auto/buffertest.cpp
+index 4a4a55a..2d3a482 100644
+--- a/tests/auto/buffertest.cpp
++++ b/tests/auto/buffertest.cpp
+@@ -17,7 +17,7 @@
+ */
+ #include "qgsttest.h"
+ #include <QGst/Buffer>
+-#include <QGst/Memory>
++#include <QGst/QGstMemory>
+ #include <QGst/Caps>
+ 
+ class BufferTest : public QGstTest
+diff --git a/tests/auto/memorytest.cpp b/tests/auto/memorytest.cpp
+index 88c4ebb..afa73de 100644
+--- a/tests/auto/memorytest.cpp
++++ b/tests/auto/memorytest.cpp
+@@ -17,7 +17,7 @@
+ 
+ #include "qgsttest.h"
+ #include <QGlib/Error>
+-#include <QGst/Memory>
++#include <QGst/QGstMemory>
+ #include <QGst/Allocator>
+ 
+ class MemoryTest : public QGstTest
+-- 
+2.26.2
+

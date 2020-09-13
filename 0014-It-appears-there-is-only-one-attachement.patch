@@ -1,7 +1,7 @@
 From 6fc7f9bda0d9ec7a3c71f54be889ca8c8280f469 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
 Date: Sat, 16 Apr 2016 21:42:16 -0700
-Subject: [PATCH 13/16] It appears there is only one attachement.
+Subject: [PATCH 14/36] It appears there is only one attachement.
 
 As far as I can tell from staring at the code it really
 does look like there's only one attachment added to the tag
@@ -26,5 +26,5 @@ index 1f649b8..043f930 100644
  }
  
 -- 
-2.8.3
+2.26.2
 

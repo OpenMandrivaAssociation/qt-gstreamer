@@ -1,0 +1,30 @@
+From 13a6c5337b5f4407159c3d6aaea194c188c162a5 Mon Sep 17 00:00:00 2001
+From: "Daniele E. Domenichelli" <daniele.domenichelli@iit.it>
+Date: Mon, 9 Oct 2017 13:19:39 +0200
+Subject: [PATCH 27/36] FindGLIB2: Do not use REQUIRED to find PkgConfig and
+ glib-2.0
+
+---
+ cmake/modules/FindGLIB2.cmake | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/cmake/modules/FindGLIB2.cmake b/cmake/modules/FindGLIB2.cmake
+index 54ac2e7..b608ab1 100644
+--- a/cmake/modules/FindGLIB2.cmake
++++ b/cmake/modules/FindGLIB2.cmake
+@@ -17,8 +17,10 @@ if(GLIB2_INCLUDE_DIR AND GLIB2_LIBRARIES)
+ endif(GLIB2_INCLUDE_DIR AND GLIB2_LIBRARIES)
+ 
+ if (NOT WIN32)
+-   find_package(PkgConfig REQUIRED)
+-   pkg_check_modules(PKG_GLIB REQUIRED glib-2.0)
++  find_package(PkgConfig QUIET)
++  if(PKG_CONFIG_FOUND)
++    pkg_check_modules(PKG_GLIB QUIET glib-2.0)
++  endif()
+ endif(NOT WIN32)
+ 
+ find_path(GLIB2_MAIN_INCLUDE_DIR glib.h
+-- 
+2.26.2
+

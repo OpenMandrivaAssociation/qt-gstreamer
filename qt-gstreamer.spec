@@ -8,33 +8,51 @@
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
 Version:	1.2.0
-Release:	11
+Release:	12
 License:	LGPLv2+
 Group:		Development/KDE and Qt
 Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
 Source0:	http://gstreamer.freedesktop.org/src/qt-gstreamer/%{name}-%{version}.tar.xz
 ## upstream patches
-Patch0:		0000-gstqtvideosink-fix-memory-leak-and-synchronization-i.patch
-Patch1:		0001-CMakeLists.txt-actually-require-GStreamer-1.2.0.patch
-Patch2:		0002-qtglvideosinkbase-don-t-use-variable-name-interface-.patch
-Patch3:		0003-when-built-against-1.4-the-unit-test-fails-because-i.patch
-Patch4:		0004-gstreamer-now-supports-animated-PNGs-so-PNG-is-now-a.patch
-Patch5:		0005-tests-auto-taglisttest.cpp-it-appears-tag-lists-remo.patch
-Patch6:		0006-Create-an-empty-structure-to-pass-to-gst_message_new.patch
-Patch7:		0007-ElementMessage-also-needs-a-valid-structure.patch
-Patch8:		0008-Add-pbutils-include-directory-to-include-paths.patch
-Patch9:		0009-Workaround-build-failures-with-boost-1.57-and-moc.patch
-Patch10:	0010-Fix-compilation-with-GStreamer-1.5.1.patch
-Patch11:	0011-whitespace-cleanup.patch
-Patch12:	0012-By-GStreamer-1.6-the-audio-codec-name-for-FLAC-chang.patch
-Patch13:	0013-It-appears-there-is-only-one-attachement.patch
-Patch14:	0014-The-geometry-must-never-be-set-to-0-once-the-node-is.patch
-Patch15:	0015-Fix-build-with-Clang-3.8.patch
-Patch16:	0016-gst_message_new_application-fails-when-passed-a-NULL.patch
-
+Patch0:		0001-gstqtvideosink-fix-memory-leak-and-synchronization-i.patch
+Patch1:		0002-CMakeLists.txt-actually-require-GStreamer-1.2.0.patch
+Patch2:		0003-qtglvideosinkbase-don-t-use-variable-name-interface-.patch
+Patch3:		0004-when-built-against-1.4-the-unit-test-fails-because-i.patch
+Patch4:		0005-gstreamer-now-supports-animated-PNGs-so-PNG-is-now-a.patch
+Patch5:		0006-tests-auto-taglisttest.cpp-it-appears-tag-lists-remo.patch
+Patch6:		0007-Create-an-empty-structure-to-pass-to-gst_message_new.patch
+Patch7:		0008-ElementMessage-also-needs-a-valid-structure.patch
+Patch8:		0009-Add-pbutils-include-directory-to-include-paths.patch
+Patch9:		0010-Workaround-build-failures-with-boost-1.57-and-moc.patch
+Patch10:	0011-Fix-compilation-with-GStreamer-1.5.1.patch
+Patch11:	0012-whitespace-cleanup.patch
+Patch12:	0013-By-GStreamer-1.6-the-audio-codec-name-for-FLAC-chang.patch
+Patch13:	0014-It-appears-there-is-only-one-attachement.patch
+Patch14:	0015-The-geometry-must-never-be-set-to-0-once-the-node-is.patch
+Patch15:	0016-Fix-build-with-Clang-3.8.patch
+Patch16:	0017-gst_message_new_application-fails-when-passed-a-NULL.patch
+Patch17:	0018-Set-default-empty-structure-on-Application-and-Eleme.patch
+Patch18:	0019-Fix-crash-when-the-VideoItem-moves-in-the-SceneGraph.patch
+Patch19:	0020-Fix-QGst-Memory-bug-on-case-insensitive-fs.patch
+Patch20:	0021-Fix-QtGStreamer-lookup-on-Qt5.patch
+Patch21:	0022-QGst-Pad-strong-ref-the-event-in-sendEvent.patch
+Patch22:	0023-qt5glvideosink-fix-of-too-much-red-value-in-video.patch
+Patch23:	0024-Fix-cmake-with-Qt-5.11_beta3-dropping-qt5_use_module.patch
+Patch24:	0025-openglsurfacepainter.cpp-remove-1-for-right-and-bott.patch
+Patch25:	0026-videomaterial.cpp-Prevent-the-use-of-uninitialized-t.patch
+Patch26:	0027-FindGLIB2-Do-not-use-REQUIRED-to-find-PkgConfig-and-.patch
+Patch27:	0028-FindGStreamer-Do-not-search-for-plugin-dir-if-gstrea.patch
+Patch28:	0029-FindGStreamer-Fix-cases-where-gst.h-and-gstconfig.h-.patch
+Patch29:	0030-Use-GSTREAMER_INCLUDE_DIRS-instead-of-GSTREAMER_INCL.patch
+Patch30:	0031-Device-DeviceMonitor-support.patch
+Patch31:	0032-DeviceMonitor-example.patch
+Patch32:	0033-Fix-discoverer-test.patch
+Patch33:	0034-Fix-QUIET-flag-in-FindGStreamer-and-FindGStreamerPlu.patch
+Patch34:	0035-README-add-maintenance-notice.patch
+Patch35:	0036-QGst-caps-compilation-fix-from-https-bugs.kde.org-sh.patch
 ## uptreamable patches
-Patch100:	qt-gstreamer-1.2.0-boost_160.patch
-Patch101:	https://git.archlinux.org/svntogit/packages.git/plain/trunk/gstreamer-1.16.patch
+#Patch100:	qt-gstreamer-1.2.0-boost_160.patch
+Patch101:	qt-gstreamer-1.2.0-compile.patch
 
 BuildRequires:	bison
 BuildRequires:	cmake

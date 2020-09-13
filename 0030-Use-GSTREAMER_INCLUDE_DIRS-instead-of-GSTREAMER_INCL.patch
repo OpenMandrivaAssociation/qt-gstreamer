@@ -1,0 +1,51 @@
+From 49bef1a1f1b383b2ada61c1fa84a836195d79ea2 Mon Sep 17 00:00:00 2001
+From: "Daniele E. Domenichelli" <daniele.domenichelli@iit.it>
+Date: Fri, 13 Oct 2017 00:52:36 +0200
+Subject: [PATCH 30/36] Use GSTREAMER_INCLUDE_DIRS instead of
+ GSTREAMER_INCLUDE_DIR
+
+---
+ elements/CMakeLists.txt   | 2 +-
+ src/QGst/CMakeLists.txt   | 2 +-
+ tests/auto/CMakeLists.txt | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/elements/CMakeLists.txt b/elements/CMakeLists.txt
+index bfa7f65..242d082 100644
+--- a/elements/CMakeLists.txt
++++ b/elements/CMakeLists.txt
+@@ -8,7 +8,7 @@ add_definitions(-DPACKAGE="qt-gstreamer"
+                 -DGST_DISABLE_XML
+                 -DGST_DISABLE_LOADSAVE)
+ 
+-include_directories(${GSTREAMER_INCLUDE_DIR} ${GLIB2_INCLUDE_DIR})
++include_directories(${GSTREAMER_INCLUDE_DIRS} ${GLIB2_INCLUDE_DIR})
+ 
+ if (GSTREAMER_BASE_LIBRARY_FOUND AND GSTREAMER_VIDEO_LIBRARY_FOUND)
+     include_directories(${GSTREAMER_BASE_INCLUDE_DIR} ${GSTREAMER_VIDEO_INCLUDE_DIR})
+diff --git a/src/QGst/CMakeLists.txt b/src/QGst/CMakeLists.txt
+index a13f1f5..f7bc74e 100644
+--- a/src/QGst/CMakeLists.txt
++++ b/src/QGst/CMakeLists.txt
+@@ -140,7 +140,7 @@ set(QTGSTREAMER_QUICK_SOVERSION 0)
+ set(QTGSTREAMER_UI_SOVERSION 0)
+ set(QTGSTREAMER_UTILS_SOVERSION 0)
+ include_directories(
+-    ${GSTREAMER_INCLUDE_DIR}
++    ${GSTREAMER_INCLUDE_DIRS}
+     ${GSTREAMER_AUDIO_INCLUDE_DIR}
+     ${GSTREAMER_VIDEO_INCLUDE_DIR}
+     ${GSTREAMER_BASE_INCLUDE_DIR}
+diff --git a/tests/auto/CMakeLists.txt b/tests/auto/CMakeLists.txt
+index dc1cbd8..d395450 100644
+--- a/tests/auto/CMakeLists.txt
++++ b/tests/auto/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-include_directories(${GSTREAMER_INCLUDE_DIR} ${GSTREAMER_PBUTILS_INCLUDE_DIR} ${GLIB2_INCLUDE_DIR} ${QTGSTREAMER_INCLUDES})
++include_directories(${GSTREAMER_INCLUDE_DIRS} ${GSTREAMER_PBUTILS_INCLUDE_DIR} ${GLIB2_INCLUDE_DIR} ${QTGSTREAMER_INCLUDES})
+ add_definitions(${QTGSTREAMER_DEFINITIONS} -DGST_DISABLE_XML -DGST_DISABLE_LOADSAVE)
+ add_definitions(-DSRCDIR="${CMAKE_CURRENT_SOURCE_DIR}")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${QTGSTREAMER_FLAGS}")
+-- 
+2.26.2
+

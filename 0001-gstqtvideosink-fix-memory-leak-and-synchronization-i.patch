@@ -1,7 +1,7 @@
 From fe3e8979697773c69d98d172f3eea0bf0dd37287 Mon Sep 17 00:00:00 2001
 From: George Kiagiadakis <george.kiagiadakis@collabora.com>
 Date: Tue, 30 Sep 2014 01:11:58 +0300
-Subject: [PATCH 00/16] gstqtvideosink: fix memory leak and synchronization
+Subject: [PATCH 01/36] gstqtvideosink: fix memory leak and synchronization
  issue related to buffer reference counting
 
 https://bugzilla.gnome.org/show_bug.cgi?id=736758
@@ -36,5 +36,5 @@ index bda535c..3073e6d 100644
  
  int VideoMaterial::compare(const QSGMaterial *other) const
 -- 
-2.8.3
+2.26.2
 

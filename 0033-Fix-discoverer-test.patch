@@ -1,0 +1,27 @@
+From 1ebcb1c4ecd948d0fa9b12f80ec02afd7720a989 Mon Sep 17 00:00:00 2001
+From: George Kiagiadakis <george.kiagiadakis@collabora.com>
+Date: Fri, 4 May 2018 17:40:59 +0300
+Subject: [PATCH 33/36] Fix discoverer test
+
+https://bugzilla.gnome.org/show_bug.cgi?id=710370
+---
+ tests/auto/discoverertest.cpp | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/tests/auto/discoverertest.cpp b/tests/auto/discoverertest.cpp
+index 84dd760..ee9b92a 100644
+--- a/tests/auto/discoverertest.cpp
++++ b/tests/auto/discoverertest.cpp
+@@ -391,9 +391,6 @@ void DiscovererTest::setupDiscoveryData()
+                                  ->setSampleRate(48000)->setChannels(1)->setDepth(16)
+                                  ->addTag("audio-codec", "FLAC")
+                                  ->addTag("container-format", "Ogg"))
+-                << StreamInfoPtr((new AudioStreamInfo("audio/x-flac"))
+-                                 ->setSampleRate(48000)->setChannels(1)
+-                                 ->setNative(false))
+                 << StreamInfoPtr((new VideoStreamInfo("video/x-theora"))
+                                  ->setWidth(160)->setHeight(120)->setInterlaced(false)
+                                  ->setBitrate(200000)->setFramerate(QGst::Fraction(5, 1))
+-- 
+2.26.2
+

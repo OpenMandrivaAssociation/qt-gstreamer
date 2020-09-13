@@ -1,0 +1,169 @@
+From ea0d273008316e875a2f6496c0f5f3fa1fcfb6b8 Mon Sep 17 00:00:00 2001
+From: Aleix Pol <aleixpol@kde.org>
+Date: Fri, 10 Mar 2017 01:50:33 +0100
+Subject: [PATCH 19/36] Fix crash when the VideoItem moves in the SceneGraph
+
+When the item is recreated it should set the format on the new node,
+otherwise we get the crash.
+
+BUG: 744816
+---
+ .../delegates/qtquick2videosinkdelegate.cpp   |  1 +
+ tests/auto/CMakeLists.txt                     |  9 ++
+ tests/auto/qtquick2test.cpp                   | 87 +++++++++++++++++++
+ tests/auto/videoitemtest.qml                  | 20 +++++
+ 4 files changed, 117 insertions(+)
+ create mode 100644 tests/auto/qtquick2test.cpp
+ create mode 100644 tests/auto/videoitemtest.qml
+
+diff --git a/elements/gstqtvideosink/delegates/qtquick2videosinkdelegate.cpp b/elements/gstqtvideosink/delegates/qtquick2videosinkdelegate.cpp
+index 8cb261f..b4e894a 100644
+--- a/elements/gstqtvideosink/delegates/qtquick2videosinkdelegate.cpp
++++ b/elements/gstqtvideosink/delegates/qtquick2videosinkdelegate.cpp
+@@ -32,6 +32,7 @@ QSGNode* QtQuick2VideoSinkDelegate::updateNode(QSGNode *node, const QRectF & tar
+     if (!vnode) {
+         GST_INFO_OBJECT(m_sink, "creating new VideoNode");
+         vnode = new VideoNode;
++        m_formatDirty = true;
+     }
+ 
+     if (!m_buffer) {
+diff --git a/tests/auto/CMakeLists.txt b/tests/auto/CMakeLists.txt
+index 6b53366..dc1cbd8 100644
+--- a/tests/auto/CMakeLists.txt
++++ b/tests/auto/CMakeLists.txt
+@@ -33,3 +33,12 @@ qgst_test(discoverertest)
+ qgst_test(allocatortest)
+ qgst_test(memorytest)
+ qgst_test(padtest)
++
++if(TARGET Qt5GStreamerQuick)
++    add_executable(qtquick2test qtquick2test.cpp)
++    target_link_libraries(qtquick2test Qt5::Qml Qt5GStreamerQuick ${QTGSTREAMER_LIBRARIES})
++    qt4or5_use_modules(qtquick2test Test)
++    add_test(NAME qtquick2test
++             COMMAND cmake -E env QML2_IMPORT_PATH=${CMAKE_BINARY_DIR}/src/qml/quick2/:$ENV{QML2_IMPORT_PATH} GST_PLUGIN_PATH=${CMAKE_BINARY_DIR}/elements/gstqtvideosink/:$ENV{GST_PLUGIN_PATH} ${CMAKE_CURRENT_BINARY_DIR}/qtquick2test
++             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
++endif()
+diff --git a/tests/auto/qtquick2test.cpp b/tests/auto/qtquick2test.cpp
+new file mode 100644
+index 0000000..05f1575
+--- /dev/null
++++ b/tests/auto/qtquick2test.cpp
+@@ -0,0 +1,87 @@
++/*
++    Copyright (C) 2017 Aleix Pol Gonzalez <aleixpol@kde.org>
++
++    This library is free software; you can redistribute it and/or modify
++    it under the terms of the GNU Lesser General Public License as published
++    by the Free Software Foundation; either version 2.1 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU Lesser General Public License for more details.
++
++    You should have received a copy of the GNU Lesser General Public License
++    along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++
++#include <QTest>
++#include <QSignalSpy>
++#include <QGst/Init>
++#include <QQmlApplicationEngine>
++#include <QQmlParserStatus>
++#include <QQmlContext>
++#include <QGlib/Connect>
++#include <QGst/Pipeline>
++#include <QGst/Bus>
++#include <QGst/Parse>
++#include <QGst/ElementFactory>
++#include <QGst/Message>
++#include <QGst/Quick/VideoSurface>
++
++
++class QtQuick2Test : public QObject
++{
++    Q_OBJECT
++private:
++    void onBusMessage(const QGst::MessagePtr &msg)
++    {
++        switch (msg->type()) {
++        case QGst::MessageError: //Some error occurred.
++            qCritical() << msg.staticCast<QGst::ErrorMessage>()->error();
++            break;
++        default:
++//             qDebug() << msg->type();
++//             qDebug() << msg->typeName();
++//             qDebug() << msg->internalStructure()->name();
++            break;
++        }
++    }
++
++private Q_SLOTS:
++    void testLaunch();
++};
++
++void QtQuick2Test::testLaunch()
++{
++    QGst::init();
++
++    QQmlApplicationEngine* engine = new QQmlApplicationEngine(this);
++    QGst::Quick::VideoSurface *surface = new QGst::Quick::VideoSurface(this);
++
++    auto source = QGst::ElementFactory::make("videotestsrc", "");
++
++    auto pipeline = QGst::Pipeline::create();
++    auto bus = pipeline->bus();
++    bus->addSignalWatch();
++    QGlib::connect(bus, "message", this, &QtQuick2Test::onBusMessage);
++    pipeline->add(source, surface->videoSink());
++
++    source->link(surface->videoSink());
++
++    pipeline->setState(QGst::StatePlaying);
++
++    engine->rootContext()->setContextProperty("surface1", surface);
++    engine->load(QUrl("videoitemtest.qml"));
++
++    QSignalSpy spy(engine->rootObjects().first(), SIGNAL(frameSwapped()));
++    spy.wait(100);
++
++    pipeline->setState(QGst::StateNull);
++
++    delete engine;
++}
++
++QTEST_MAIN(QtQuick2Test)
++
++#include "qtquick2test.moc"
+diff --git a/tests/auto/videoitemtest.qml b/tests/auto/videoitemtest.qml
+new file mode 100644
+index 0000000..589ca6e
+--- /dev/null
++++ b/tests/auto/videoitemtest.qml
+@@ -0,0 +1,20 @@
++import QtQuick 2.1
++import QtQuick.Window 2.1
++import QtGStreamer 1.0
++
++Window {
++    width: 200
++    height: 200
++    visible: true
++
++    ListView {
++        anchors.fill: parent
++        model: 3
++
++        delegate: VideoItem {
++            width: 100
++            height: 100
++            surface: surface1
++        }
++    }
++}
+-- 
+2.26.2
+

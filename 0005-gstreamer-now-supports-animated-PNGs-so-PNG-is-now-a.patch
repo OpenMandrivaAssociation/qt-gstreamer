@@ -1,7 +1,7 @@
 From 5037310103254264c0cf8c8be4a24fca30db90a2 Mon Sep 17 00:00:00 2001
 From: Diane Trout <diane@ghic.org>
 Date: Mon, 6 Apr 2015 21:52:57 -0700
-Subject: [PATCH 04/16] gstreamer now supports animated PNGs, so PNG is now a
+Subject: [PATCH 05/36] gstreamer now supports animated PNGs, so PNG is now a
  video-codec
 
 ---
@@ -26,5 +26,5 @@ index 27e6770..6fef794 100644
              << baseUrl.resolved(QUrl::fromEncoded("data/numbers07.jpg")) << 0 << QString()
              << QGst::ClockTime(0) << NonSeekable
 -- 
-2.8.3
+2.26.2
 

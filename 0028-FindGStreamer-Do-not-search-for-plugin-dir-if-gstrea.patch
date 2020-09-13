@@ -1,0 +1,32 @@
+From 6d3282c28340c688e7749c99c29b8f8f7065a418 Mon Sep 17 00:00:00 2001
+From: "Daniele E. Domenichelli" <daniele.domenichelli@iit.it>
+Date: Tue, 10 Oct 2017 09:24:16 +0200
+Subject: [PATCH 28/36] FindGStreamer: Do not search for plugin dir if
+ gstreamer was not found
+
+---
+ cmake/modules/FindGStreamer.cmake | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/modules/FindGStreamer.cmake b/cmake/modules/FindGStreamer.cmake
+index fe6cde1..1981a07 100644
+--- a/cmake/modules/FindGStreamer.cmake
++++ b/cmake/modules/FindGStreamer.cmake
+@@ -33,9 +33,11 @@ find_package(PkgConfig)
+ 
+ if (PKG_CONFIG_FOUND)
+     pkg_check_modules(PKG_GSTREAMER gstreamer-${GSTREAMER_ABI_VERSION})
+-    exec_program(${PKG_CONFIG_EXECUTABLE}
+-                 ARGS --variable pluginsdir gstreamer-${GSTREAMER_ABI_VERSION}
+-                 OUTPUT_VARIABLE PKG_GSTREAMER_PLUGIN_DIR)
++    if(PKG_GSTREAMER_FOUND)
++        exec_program(${PKG_CONFIG_EXECUTABLE}
++                     ARGS --variable pluginsdir gstreamer-${GSTREAMER_ABI_VERSION}
++                     OUTPUT_VARIABLE PKG_GSTREAMER_PLUGIN_DIR)
++    endif()
+     set(GSTREAMER_DEFINITIONS ${PKG_GSTREAMER_CFLAGS})
+ endif()
+ 
+-- 
+2.26.2
+

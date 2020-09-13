@@ -1,0 +1,34 @@
+From 088acb70e969f8ece8986cf2ab0c2f4ac1379f48 Mon Sep 17 00:00:00 2001
+From: Jeremie Knuesel <jeremie.knusel@sensefly.com>
+Date: Fri, 11 Apr 2014 12:03:26 +0200
+Subject: [PATCH 25/36] openglsurfacepainter.cpp: remove '+1' for right and
+ bottom in QRECT_TO_GLMATRIX
+
+The '+1' calculation is wrong now that QRectF is used instead of QRect.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=740326
+---
+ elements/gstqtvideosink/painters/openglsurfacepainter.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/elements/gstqtvideosink/painters/openglsurfacepainter.cpp b/elements/gstqtvideosink/painters/openglsurfacepainter.cpp
+index c9f2a77..51afab2 100644
+--- a/elements/gstqtvideosink/painters/openglsurfacepainter.cpp
++++ b/elements/gstqtvideosink/painters/openglsurfacepainter.cpp
+@@ -37,10 +37,10 @@
+ 
+ #define QRECT_TO_GLMATRIX(rect) \
+     { \
+-        GLfloat(rect.left())     , GLfloat(rect.bottom() + 1), \
+-        GLfloat(rect.right() + 1), GLfloat(rect.bottom() + 1), \
++        GLfloat(rect.left())     , GLfloat(rect.bottom()), \
++        GLfloat(rect.right()), GLfloat(rect.bottom()), \
+         GLfloat(rect.left())     , GLfloat(rect.top()), \
+-        GLfloat(rect.right() + 1), GLfloat(rect.top()) \
++        GLfloat(rect.right()), GLfloat(rect.top()) \
+     }
+ 
+ OpenGLSurfacePainter::OpenGLSurfacePainter()
+-- 
+2.26.2
+
