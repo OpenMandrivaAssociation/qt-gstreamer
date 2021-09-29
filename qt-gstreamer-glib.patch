@@ -1,0 +1,26 @@
+diff --git a/elements/gstqtvideosink/gstqtvideosinkplugin.h b/elements/gstqtvideosink/gstqtvideosinkplugin.h
+index dc04671..7b1ceab 100644
+--- a/elements/gstqtvideosink/gstqtvideosinkplugin.h
++++ b/elements/gstqtvideosink/gstqtvideosinkplugin.h
+@@ -28,7 +28,7 @@ GST_DEBUG_CATEGORY_EXTERN(gst_qt_video_sink_debug);
+     GType cpp_type::get_type() \
+     { \
+         static volatile gsize gonce_data = 0; \
+-        if (g_once_init_enter(&gonce_data)) { \
++        if (g_once_init_enter((unsigned long *)&gonce_data)) { \
+             GType type = 0; \
+             GTypeInfo info; \
+             info.class_size = sizeof(cpp_type##Class); \
+diff --git a/src/QGlib/value.cpp b/src/QGlib/value.cpp
+index 932ffad..226a259 100644
+--- a/src/QGlib/value.cpp
++++ b/src/QGlib/value.cpp
+@@ -57,7 +57,7 @@ Dispatcher::Dispatcher()
+     }; \
+     setVTable(GTYPE, ValueVTable(ValueVTable_##NICK::set, ValueVTable_##NICK::get));
+ 
+-    DECLARE_VTABLE(char, char, Type::Char)
++    DECLARE_VTABLE(char, schar, Type::Char)
+     DECLARE_VTABLE(unsigned char, uchar, Type::Uchar)
+     DECLARE_VTABLE(bool, boolean, Type::Boolean)
+     DECLARE_VTABLE(int, int, Type::Int)
