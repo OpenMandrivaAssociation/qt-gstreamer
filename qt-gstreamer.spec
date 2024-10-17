@@ -9,7 +9,7 @@ Version:	1.2.0
 Release:	19
 License:	LGPLv2+
 Group:		Development/KDE and Qt
-Url:		http://gstreamer.freedesktop.org/wiki/QtGStreamer
+Url:		https://gstreamer.freedesktop.org/wiki/QtGStreamer
 Source0:	http://gstreamer.freedesktop.org/src/qt-gstreamer/%{name}-%{version}.tar.xz
 ## upstream patches
 Patch0:		0001-gstqtvideosink-fix-memory-leak-and-synchronization-i.patch
