@@ -200,7 +200,9 @@ Qt5Gstreamer.
 %autosetup -p1
 
 %build
-%cmake -DQT_VERSION=5
+# examples_distcheck uses get_target_property() on a missing target;
+# CMake 4 treats that as a hard error. Examples are not packaged.
+%cmake -DQT_VERSION=5 -DQTGSTREAMER_EXAMPLES=OFF
 %make_build
 
 %install
