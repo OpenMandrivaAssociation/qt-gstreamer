@@ -201,6 +201,8 @@ Qt5Gstreamer.
 %build
 # examples_distcheck uses get_target_property() on a missing target;
 # CMake 4 treats that as a hard error. Examples are not packaged.
+# C++17 removed the register keyword; clang treats remaining uses as errors.
+export CXXFLAGS="%{optflags} -Wno-register"
 %cmake -DQT_VERSION=5 -DQTGSTREAMER_EXAMPLES=OFF
 %make_build
 
