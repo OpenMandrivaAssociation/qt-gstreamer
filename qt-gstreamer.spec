@@ -1,7 +1,13 @@
 %define api 1.0
 %define glibapi 2.0
 %define major 0
-%define qt5_name qt5-gstreamer
+%define qt6_name qt6-gstreamer
+%define oldlibqt5glib %mklibname qt5glib 2.0 %{major}
+%define oldlibqt5gstreamer %mklibname qt5gstreamer %{api} %{major}
+%define oldlibqt5gstreamerquick %mklibname qt5gstreamerquick %{api} %{major}
+%define oldlibqt5gstreamerui %mklibname qt5gstreamerui %{api} %{major}
+%define oldlibqt5gstreamerutils %mklibname qt5gstreamerutils %{api} %{major}
+%define olddevnameQt5 %mklibname -d qt5-gstreamer
 
 Summary:	C++ bindings for GStreamer with a Qt-style API
 Name:		qt-gstreamer
@@ -54,21 +60,23 @@ Patch101:	qt-gstreamer-1.2.0-compile.patch
 Patch102:	qt-gstreamer-glib.patch
 # CMake 4: get_target_property() on a missing target is an error
 Patch103:	qt-gstreamer-cmake4-doxygen.patch
+Patch104:	qt-gstreamer-qt6.patch
 
 BuildRequires:	bison
 BuildRequires:	cmake
 BuildRequires:	doxygen
 BuildRequires:	flex
 BuildRequires:	boost-devel
-BuildRequires:	qmake5
+BuildRequires:	qmake6
 BuildRequires:	pkgconfig(gstreamer-plugins-base-%{api})
-BuildRequires:	pkgconfig(Qt5Core)
-BuildRequires:	pkgconfig(Qt5Quick)
-BuildRequires:	pkgconfig(Qt5Gui)
-BuildRequires:	pkgconfig(Qt5OpenGL)
-BuildRequires:	pkgconfig(Qt5Qml)
-BuildRequires:	pkgconfig(Qt5Quick)
-BuildRequires:	pkgconfig(Qt5Test)
+BuildRequires:	pkgconfig(Qt6Core)
+BuildRequires:	pkgconfig(Qt6Gui)
+BuildRequires:	pkgconfig(Qt6OpenGL)
+BuildRequires:	pkgconfig(Qt6OpenGLWidgets)
+BuildRequires:	pkgconfig(Qt6Qml)
+BuildRequires:	pkgconfig(Qt6Quick)
+BuildRequires:	pkgconfig(Qt6Test)
+BuildRequires:	pkgconfig(Qt6Widgets)
 
 %description
 QtGStreamer provides C++ bindings for GStreamer with a Qt-style API,
@@ -76,126 +84,134 @@ plus some helper classes for integrating GStreamer better in Qt
 applications.
 
 #-------------------------------------------------------------------
-%package -n %{qt5_name}
-Summary: C++ bindings for GStreamer with a Qt5-style API
+%package -n %{qt6_name}
+Summary: C++ bindings for GStreamer with a Qt6-style API
 Group:   Development/KDE and Qt
+Obsoletes: qt5-gstreamer < %{EVRD}
 
-%description -n %{qt5_name}
-Qt5GStreamer provides C++ bindings for GStreamer with a Qt-style API,
-plus some helper classes for integrating GStreamer better in Qt5
+%description -n %{qt6_name}
+Qt6GStreamer provides C++ bindings for GStreamer with a Qt-style API,
+plus some helper classes for integrating GStreamer better in Qt6
 applications.
 
-%files -n %{qt5_name}
-%{_libdir}/gstreamer-%{api}/libgstqt5videosink.so
-%{_libdir}/qt5/qml/QtGStreamer/
+%files -n %{qt6_name}
+%{_libdir}/gstreamer-%{api}/libgstqt6videosink.so
+%{_libdir}/qt6/qml/QtGStreamer/
 
 #-------------------------------------------------------------------
-%define libqt5glib %mklibname qt5glib 2.0 %{major}
+%define libqt6glib %mklibname qt6glib 2.0 %{major}
 
-%package -n %{libqt5glib}
-Summary: C++/Qt5 bindings for parts of the GLib and GObject APIs
+%package -n %{libqt6glib}
+Summary: C++/Qt6 bindings for parts of the GLib and GObject APIs
 Group:   System/Libraries
+Obsoletes: %{oldlibqt5glib} < %{EVRD}
 
-%description -n %{libqt5glib}
-Library providing C++/Q5t bindings for parts of the GLib and GObject 
-APIs, a base on which Qt5GStreamer is built.
+%description -n %{libqt6glib}
+Library providing C++/Qt6 bindings for parts of the GLib and GObject
+APIs, a base on which Qt6GStreamer is built.
 
-%files -n %{libqt5glib}
-%{_libdir}/libQt5GLib-2.0.so.%{major}*
-%{_libdir}/libQt5GLib-2.0.so.%{version}
+%files -n %{libqt6glib}
+%{_libdir}/libQt6GLib-2.0.so.%{major}*
+%{_libdir}/libQt6GLib-2.0.so.%{version}
 
 #-------------------------------------------------------------------
-%define libqt5gstreamer %mklibname qt5gstreamer %{api} %{major}
+%define libqt6gstreamer %mklibname qt6gstreamer %{api} %{major}
 
-%package -n %{libqt5gstreamer}
-Summary: C++/Qt5 bindings for GStreamer
+%package -n %{libqt6gstreamer}
+Summary: C++/Qt6 bindings for GStreamer
 Group:   System/Libraries
+Obsoletes: %{oldlibqt5gstreamer} < %{EVRD}
 
-%description -n %{libqt5gstreamer}
-Library providing C++/Qt5 bindings for GStreamer
+%description -n %{libqt6gstreamer}
+Library providing C++/Qt6 bindings for GStreamer
 
-%files -n %{libqt5gstreamer}
-%{_libdir}/libQt5GStreamer-%{api}.so.%{major}*
-%{_libdir}/libQt5GStreamer-%{api}.so.%{version}
+%files -n %{libqt6gstreamer}
+%{_libdir}/libQt6GStreamer-%{api}.so.%{major}*
+%{_libdir}/libQt6GStreamer-%{api}.so.%{version}
 
 #-------------------------------------------------------------------
-%define libqt5gstreamerquick %mklibname qt5gstreamerquick %{api} %{major}
+%define libqt6gstreamerquick %mklibname qt6gstreamerquick %{api} %{major}
 
-%package -n %{libqt5gstreamerquick}
-Summary: C++/Qt5 bindings for GStreamer
+%package -n %{libqt6gstreamerquick}
+Summary: C++/Qt6 bindings for GStreamer
 Group: System/Libraries
-%description -n %{libqt5gstreamerquick}
-Library providing C++/Qt5 bindings for GStreamer
+Obsoletes: %{oldlibqt5gstreamerquick} < %{EVRD}
+%description -n %{libqt6gstreamerquick}
+Library providing C++/Qt6 bindings for GStreamer
 
-%files -n %{libqt5gstreamerquick}
-%{_libdir}/libQt5GStreamerQuick-%{api}.so.%{major}*
-%{_libdir}/libQt5GStreamerQuick-%{api}.so.%{version}
+%files -n %{libqt6gstreamerquick}
+%{_libdir}/libQt6GStreamerQuick-%{api}.so.%{major}*
+%{_libdir}/libQt6GStreamerQuick-%{api}.so.%{version}
 
 #-------------------------------------------------------------------
-%define libqt5gstreamerui %mklibname qt5gstreamerui %{api} %{major}
+%define libqt6gstreamerui %mklibname qt6gstreamerui %{api} %{major}
 
-%package -n %{libqt5gstreamerui}
-Summary: Library providing integration with Qt5Gui
+%package -n %{libqt6gstreamerui}
+Summary: Library providing integration with Qt6Gui
 Group:   System/Libraries
+Obsoletes: %{oldlibqt5gstreamerui} < %{EVRD}
 
-%description -n %{libqt5gstreamerui}
-Library providing integration with Qt5Gui.
+%description -n %{libqt6gstreamerui}
+Library providing integration with Qt6Gui.
 
-%files -n %{libqt5gstreamerui}
-%{_libdir}/libQt5GStreamerUi-%{api}.so.%{major}*
-%{_libdir}/libQt5GStreamerUi-%{api}.so.%{version}
+%files -n %{libqt6gstreamerui}
+%{_libdir}/libQt6GStreamerUi-%{api}.so.%{major}*
+%{_libdir}/libQt6GStreamerUi-%{api}.so.%{version}
 
 #-------------------------------------------------------------------
-%define libqt5gstreamerutils %mklibname qt5gstreamerutils %{api} %{major}
+%define libqt6gstreamerutils %mklibname qt6gstreamerutils %{api} %{major}
 
-%package -n %{libqt5gstreamerutils}
+%package -n %{libqt6gstreamerutils}
 Summary: Library providing some high level utility classes
 Group:   System/Libraries
+Obsoletes: %{oldlibqt5gstreamerutils} < %{EVRD}
 
-%description -n %{libqt5gstreamerutils}
+%description -n %{libqt6gstreamerutils}
 Library providing some high level utility classes.
 
-%files -n %{libqt5gstreamerutils}
-%{_libdir}/libQt5GStreamerUtils-%{api}.so.%{major}*
-%{_libdir}/libQt5GStreamerUtils-%{api}.so.%{version}
+%files -n %{libqt6gstreamerutils}
+%{_libdir}/libQt6GStreamerUtils-%{api}.so.%{major}*
+%{_libdir}/libQt6GStreamerUtils-%{api}.so.%{version}
 
 #--------------------------------------------------------------------
-%define develnameQt5 %mklibname -d %{qt5_name}
+%define develnameQt6 %mklibname -d %{qt6_name}
 
-%package -n %{develnameQt5}
-Summary: Development files for Qt5Gstreamer
+%package -n %{develnameQt6}
+Summary: Development files for Qt6Gstreamer
 Group:   Development/KDE and Qt
 
-Requires: %libqt5glib = %{EVRD}
-Requires: %libqt5gstreamer = %{EVRD}
-Requires: %libqt5gstreamerquick = %{EVRD}
-Requires: %libqt5gstreamerui = %{EVRD}
-Requires: %libqt5gstreamerutils = %{EVRD}
+Requires: %{libqt6glib} = %{EVRD}
+Requires: %{libqt6gstreamer} = %{EVRD}
+Requires: %{libqt6gstreamerquick} = %{EVRD}
+Requires: %{libqt6gstreamerui} = %{EVRD}
+Requires: %{libqt6gstreamerutils} = %{EVRD}
 Requires: boost-devel
-Provides: qt5-gstreamer-devel = %{EVRD}
+Provides: qt6-gstreamer-devel = %{EVRD}
+Obsoletes: qt5-gstreamer-devel < %{EVRD}
+Obsoletes: %{olddevnameQt5} < %{EVRD}
 
-%description -n %{develnameQt5}
-Qt5GStreamer provides C++ bindings for GStreamer with a Qt-style API,
-plus some helper classes for integrating GStreamer better in Qt5
+%description -n %{develnameQt6}
+Qt6GStreamer provides C++ bindings for GStreamer with a Qt-style API,
+plus some helper classes for integrating GStreamer better in Qt6
 applications.
 
-This package contains files for developing applications using 
-Qt5Gstreamer.
+This package contains files for developing applications using
+Qt6Gstreamer.
 
-%files -n %{develnameQt5}
+%files -n %{develnameQt6}
 %doc %{_docdir}/%{name}/html
-%_includedir/Qt5GStreamer
-%{_libdir}/cmake/Qt5GStreamer/*.cmake
-%{_libdir}/libQt5GLib-2.0.so
-%{_libdir}/libQt5GStreamer-%{api}.so
-%{_libdir}/libQt5GStreamerQuick-%{api}.so
-%{_libdir}/libQt5GStreamerUi-%{api}.so
-%{_libdir}/libQt5GStreamerUtils-%{api}.so
-%{_libdir}/pkgconfig/Qt5GLib-2.0.pc
-%{_libdir}/pkgconfig/Qt5GStreamer-%{api}.pc
-%{_libdir}/pkgconfig/Qt5GStreamerQuick-%{api}.pc
-%{_libdir}/pkgconfig/Qt5GStreamerUi-%{api}.pc
-%{_libdir}/pkgconfig/Qt5GStreamerUtils-%{api}.pc
+%{_includedir}/Qt6GStreamer
+%{_libdir}/cmake/Qt6GStreamer/*.cmake
+%{_libdir}/libQt6GLib-2.0.so
+%{_libdir}/libQt6GStreamer-%{api}.so
+%{_libdir}/libQt6GStreamerQuick-%{api}.so
+%{_libdir}/libQt6GStreamerUi-%{api}.so
+%{_libdir}/libQt6GStreamerUtils-%{api}.so
+%{_libdir}/pkgconfig/Qt6GLib-2.0.pc
+%{_libdir}/pkgconfig/Qt6GStreamer-%{api}.pc
+%{_libdir}/pkgconfig/Qt6GStreamerQuick-%{api}.pc
+%{_libdir}/pkgconfig/Qt6GStreamerUi-%{api}.pc
+%{_libdir}/pkgconfig/Qt6GStreamerUtils-%{api}.pc
 
 #--------------------------------------------------------------------
 
@@ -205,7 +221,7 @@ Qt5Gstreamer.
 %build
 # C++17 removed the register keyword; clang treats remaining uses as errors.
 export CXXFLAGS="%{optflags} -Wno-register"
-%cmake -DQT_VERSION=5 -DQTGSTREAMER_EXAMPLES=OFF
+%cmake -DQT_VERSION=6 -DQTGSTREAMER_EXAMPLES=OFF
 %make_build
 %make_build doc
 
