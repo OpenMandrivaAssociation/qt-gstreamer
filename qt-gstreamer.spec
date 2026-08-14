@@ -55,7 +55,6 @@ Patch102:	qt-gstreamer-glib.patch
 
 BuildRequires:	bison
 BuildRequires:	cmake
-BuildRequires:	doxygen
 BuildRequires:	flex
 BuildRequires:	boost-devel
 BuildRequires:	qmake5
