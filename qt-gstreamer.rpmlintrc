@@ -1,0 +1,2 @@
+# Libraries are named via %mklibname; rpmlint does not see the macros.
+addFilter("lib-package-without-%mklibname")
