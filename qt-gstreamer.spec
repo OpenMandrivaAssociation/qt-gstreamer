@@ -52,9 +52,12 @@ Patch35:	0036-QGst-caps-compilation-fix-from-https-bugs.kde.org-sh.patch
 #Patch100:	qt-gstreamer-1.2.0-boost_160.patch
 Patch101:	qt-gstreamer-1.2.0-compile.patch
 Patch102:	qt-gstreamer-glib.patch
+# CMake 4: get_target_property() on a missing target is an error
+Patch103:	qt-gstreamer-cmake4-doxygen.patch
 
 BuildRequires:	bison
 BuildRequires:	cmake
+BuildRequires:	doxygen
 BuildRequires:	flex
 BuildRequires:	boost-devel
 BuildRequires:	qmake5
@@ -180,6 +183,7 @@ This package contains files for developing applications using
 Qt5Gstreamer.
 
 %files -n %{develnameQt5}
+%doc %{_docdir}/%{name}/html
 %_includedir/Qt5GStreamer
 %{_libdir}/cmake/Qt5GStreamer/*.cmake
 %{_libdir}/libQt5GLib-2.0.so
@@ -199,12 +203,13 @@ Qt5Gstreamer.
 %autosetup -p1
 
 %build
-# examples_distcheck uses get_target_property() on a missing target;
-# CMake 4 treats that as a hard error. Examples are not packaged.
 # C++17 removed the register keyword; clang treats remaining uses as errors.
 export CXXFLAGS="%{optflags} -Wno-register"
 %cmake -DQT_VERSION=5 -DQTGSTREAMER_EXAMPLES=OFF
 %make_build
+%make_build doc
 
 %install
 %make_install -C build
+mkdir -p %{buildroot}%{_docdir}/%{name}
+cp -a build/doc/html %{buildroot}%{_docdir}/%{name}/

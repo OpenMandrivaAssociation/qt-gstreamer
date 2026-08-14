@@ -1,0 +1,28 @@
+--- a/cmake/modules/UseDoxygen.cmake
++++ b/cmake/modules/UseDoxygen.cmake
+@@ -99,10 +99,9 @@ if(DOXYGEN_FOUND AND DOXYFILE_IN_FOUND)
+ 
+ 	configure_file(${DOXYFILE_IN} Doxyfile ESCAPE_QUOTES IMMEDIATE @ONLY)
+ 
+-	get_target_property(DOC_TARGET doc TYPE)
+-	if(NOT DOC_TARGET)
++	if(NOT TARGET doc)
+ 		add_custom_target(doc)
+ 	endif()
+-		
++
+ 	add_dependencies(doc doxygen)
+ endif()
+--- a/examples/CMakeLists.txt
++++ b/examples/CMakeLists.txt
+@@ -10,8 +10,7 @@ macro(example_distcheck example)
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/RunExamplesDistCheck.cmake
+     )
+ 
+-    get_target_property(EXAMPLES_DISTCHECK_TARGET examples_distcheck TYPE)
+-    if(NOT EXAMPLES_DISTCHECK_TARGET)
++    if(NOT TARGET examples_distcheck)
+         add_custom_target(examples_distcheck)
+     endif()
+ 
+     add_dependencies(examples_distcheck example_${example}_distcheck)
